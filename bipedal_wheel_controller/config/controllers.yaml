@@ -1,0 +1,60 @@
+controllers:
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+  robot_state_controller:
+    type: robot_state_controller/RobotStateController
+    publish_rate: 100
+
+  chassis_controller:
+    type: bipedal_wheel_controller/BipedalController
+    # ChassisBase
+    publish_rate: 100
+    enable_odom_tf: true
+    publish_odom_tf: false
+    power:
+      effort_coeff: 12.0
+      vel_coeff: 0.0048
+      power_offset: 0
+    twist_angular: 0.5233
+    timeout: 0.1
+    pid_follow: { p: 8, i: 0, d: 2.0, i_max: 0.0, i_min: 0.0, antiwindup: true, publish_state: true }
+    pid_block_error: { p: 0, i: 0, d: 0.0, i_max: 0.0, i_min: 0.0, antiwindup: true, publish_state: true }
+    twist_covariance_diagonal: [ 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 ]
+
+    # BipedalController
+    pid_left_leg: { p: 1000.0, i: 100., d: 50, i_clamp_max: 10.0, i_clamp_min: -10.0, antiwindup: true, publish_state: true }
+    pid_right_leg: { p: 1000.0, i: 100., d: 50, i_clamp_max: 10.0, i_clamp_min: -10.0, antiwindup: true, publish_state: true }
+    pid_theta_diff: { p: 100.0, i: 0.0, d: 10.0, i_max: 0.0, i_min: 0.0, antiwindup: true, publish_state: false }
+    pid_roll: { p: 250.0, i: 100, d: 50., i_clamp_max: 30.0, i_clamp_min: -30.0, antiwindup: true, publish_state: false }
+    pid_yaw_vel: { p: 20.0, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
+    pid_left_leg_theta: { p: 10.0, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
+    pid_right_leg_theta: { p: 10.0, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
+    pid_left_wheel_vel: { p: 0.04, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
+    pid_right_wheel_vel: { p: 0.04, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
+
+    leg_length: 0.18
+    L_weight: 0.375
+    Lm_weight: 0.625
+    l: 0.001
+    m_w: 0.803567
+    m_p: 0.309603
+    M: 11.7
+    i_w: 0.003357
+    i_p: 0.0021406
+    i_m: 0.1748
+    g: 9.81
+    wheel_radius: 0.09
+    vmc_bias_angle: 3.665
+    left:
+      wheel_joint: "left_wheel_joint"
+      first_leg_joint: "left_hip_joint"
+      second_leg_joint: "left_knee_joint"
+    right:
+      wheel_joint: "right_wheel_joint"
+      first_leg_joint: "right_hip_joint"
+      second_leg_joint: "right_knee_joint"
+    # theta d_theta x dx phi d_phi
+    q: [ 300., 8., 5., 100., 1050., 5. ]
+    # T Tp
+    r: [ 0.6, 0.2 ]

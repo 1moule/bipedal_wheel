@@ -3,17 +3,24 @@ project(bipedal_wheel_common)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(Eigen3 REQUIRED)
+
 find_package(catkin REQUIRED
         COMPONENTS
 )
 
 catkin_package(
+        INCLUDE_DIRS
+        include
+        ${EIGEN3_INCLUDE_DIR}
         LIBRARIES
         CATKIN_DEPENDS
         DEPENDS
 )
 
 include_directories(
+        include
+        ${EIGEN3_INCLUDE_DIR}
         ${catkin_INCLUDE_DIRS}
 )
 

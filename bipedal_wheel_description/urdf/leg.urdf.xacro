@@ -10,7 +10,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://bipedal_description/meshes/first_leg.stl"/>
+                    <mesh filename="package://bipedal_wheel_description/meshes/first_leg.stl"/>
                 </geometry>
             </visual>
             <inertial>
@@ -33,13 +33,13 @@
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://bipedal_description/meshes/second_leg.stl"/>
+                    <mesh filename="package://bipedal_wheel_description/meshes/second_leg.stl"/>
                 </geometry>
             </visual>
             <collision>
                 <origin xyz="0 0 0.0" rpy="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://bipedal_description/meshes/second_leg.stl"/>
+                    <mesh filename="package://bipedal_wheel_description/meshes/second_leg.stl"/>
                 </geometry>
             </collision>
             <inertial>

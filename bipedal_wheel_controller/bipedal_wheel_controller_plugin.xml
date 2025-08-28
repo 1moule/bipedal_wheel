@@ -1,0 +1,11 @@
+<library path="lib/libbipedal_wheel_controller">
+
+    <class name="bipedal_wheel_controller/BipedalController"
+           type="bipedal_wheel_controller::BipedalController"
+           base_class_type="controller_interface::ControllerBase">
+        <description>
+            The BipedalController is Bipedal robot controller.
+        </description>
+    </class>
+
+</library>

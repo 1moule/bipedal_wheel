@@ -12,8 +12,8 @@
     <xacro:property name="wheel_joint_effort" value="3.07"/>
     <xacro:property name="wheel_joint_velocity" value="73.6"/>
 
-    <xacro:include filename="$(find bipedal_description)/urdf/leg.urdf.xacro"/>
-    <xacro:include filename="$(find bipedal_description)/urdf/leg.transmission.xacro"/>
+    <xacro:include filename="$(find bipedal_wheel_description)/urdf/leg.urdf.xacro"/>
+    <xacro:include filename="$(find bipedal_wheel_description)/urdf/leg.transmission.xacro"/>
 
     <xacro:macro name="guide_wheel" params="prefix x_offset y_offset z_offset">
         <link name="${prefix}_guide_wheel">
@@ -52,7 +52,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://bipedal_description/meshes/wheel.stl"/>
+                    <mesh filename="package://bipedal_wheel_description/meshes/wheel.stl"/>
                 </geometry>
             </visual>
             <collision>
