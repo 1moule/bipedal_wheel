@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- https://upload.wikimedia.org/wikipedia/commons/5/52/Wheelbase_and_Track.png -->
+    <xacro:property name="wheel_base" value="0.4893"/>
+    <xacro:property name="leg_x_offset" value="0.0"/>
+    <xacro:property name="leg_y_offset" value="0.208"/>
+    <xacro:property name="leg_z_offset" value="0."/>
+    <xacro:property name="leg_pitch_offset" value="${pi/2}"/>
+    <xacro:property name="wheel_radius" value="0.09"/>
+    <xacro:property name="wheel_z_offset" value="-0.270"/>
+    <xacro:property name="wheel_joint_effort" value="3.07"/>
+    <xacro:property name="wheel_joint_velocity" value="73.6"/>
+
+    <xacro:include filename="$(find bipedal_description)/urdf/leg.urdf.xacro"/>
+    <xacro:include filename="$(find bipedal_description)/urdf/leg.transmission.xacro"/>
+
+    <xacro:macro name="guide_wheel" params="prefix x_offset y_offset z_offset">
+        <link name="${prefix}_guide_wheel">
+            <visual>
+                <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+                <geometry>
+                    <cylinder length="0.01" radius="0.02"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="${pi/2}  0 0"/>
+                <geometry>
+                    <cylinder length="0.01" radius="0.02"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.05"/>
+                <origin xyz="0 0 0"/>
+                <inertia ixx="1.752e-3" ixy="-2.766e-6" ixz="-1.599e-6" iyy="3.357e-3"
+                         iyz="2.581e-6" izz="1.752e-3"/>
+            </inertial>
+        </link>
+        <joint name="${prefix}_guide_wheel_joint" type="revolute">
+            <parent link="base_link"/>
+            <child link="${prefix}_guide_wheel"/>
+            <origin xyz="${x_offset} ${y_offset} ${z_offset}" rpy="0 0 0"/>
+            <limit effort="0." velocity="99" lower="-1e16" upper="1e16"/>
+            <dynamics damping="0.05" friction="0.05"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="wheel"
+                 params="connected_to prefix wheel_x_offset wheel_y_offset wheel_z_offset  mechanical_reduction">
+        <link name="${prefix}_wheel">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://bipedal_description/meshes/wheel.stl"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="${pi/2}  0 0"/>
+                <geometry>
+                    <cylinder length="0.03" radius="${wheel_radius}"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.803567"/>
+                <origin xyz="0 0 0"/>
+                <inertia ixx="1.752e-3" ixy="-2.766e-6" ixz="-1.599e-6" iyy="3.357e-3"
+                         iyz="2.581e-6" izz="1.752e-3"/>
+            </inertial>
+        </link>
+        <joint name="${prefix}_wheel_joint" type="revolute">
+            <axis xyz="0 1 0"/>
+            <origin xyz="${wheel_x_offset} ${wheel_y_offset} ${wheel_z_offset}" rpy="0 0 0"/>
+            <parent link="${connected_to}"/>
+            <child link="${prefix}_wheel"/>
+            <limit effort="${wheel_joint_effort}" velocity="${wheel_joint_velocity}" lower="-1e16" upper="1e16"/>
+        </joint>
+        <transmission name="${prefix}_wheel_joint_trans">
+            <type>transmission_interface/SimpleTransmission</type>
+            <actuator name="${prefix}_wheel_joint_motor">
+                <mechanicalReduction>${mechanical_reduction}</mechanicalReduction>
+            </actuator>
+            <joint name="${prefix}_wheel_joint">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+        </transmission>
+    </xacro:macro>
+
+    <xacro:macro name="chassis" params="use_simulation add_wheel">
+        <link name="base_link">
+            <inertial>
+                <mass value="11.70"/>
+                <origin xyz="0.0033 0.006725 -0.013651"/>
+                <inertia ixx="2.56e-1" ixy="1.044e-3" ixz="1.56e-2" iyy="1.748e-1"
+                         iyz="-7.548e-4" izz="3.787e-1"/>
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <cylinder length="0.15" radius="0.18"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0.008 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.482 0.332 0.183"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <xacro:leg prefix="left" connected_to="base_link" pitch_offset="${leg_pitch_offset}"
+                   leg_x_offset="${-leg_x_offset}"
+                   leg_y_offset="${leg_y_offset}"
+                   leg_z_offset="${leg_z_offset}"/>
+        <xacro:leg prefix="right" connected_to="base_link" pitch_offset="${leg_pitch_offset}"
+                   leg_x_offset="${-leg_x_offset}"
+                   leg_y_offset="${-leg_y_offset}"
+                   leg_z_offset="${leg_z_offset}"/>
+
+        <xacro:leg_transmission prefix="left" mechanical_reduction="-1"/>
+        <xacro:leg_transmission prefix="right" mechanical_reduction="1"/>
+
+        <xacro:if value="${add_wheel}">
+            <xacro:wheel connected_to="left_calf" prefix="left" wheel_x_offset="0"
+                         wheel_y_offset="${wheel_base/2-leg_y_offset}"
+                         wheel_z_offset="${wheel_z_offset}" mechanical_reduction="-13"/>
+            <xacro:wheel connected_to="right_calf" prefix="right" wheel_x_offset="0"
+                         wheel_y_offset="${-(wheel_base/2-leg_y_offset)}"
+                         wheel_z_offset="${wheel_z_offset}" mechanical_reduction="13"/>
+        </xacro:if>
+
+        <xacro:guide_wheel prefix="left_front" x_offset="0.24" y_offset="0.1" z_offset="-0.08"/>
+        <xacro:guide_wheel prefix="right_front" x_offset="0.24" y_offset="-0.1" z_offset="-0.08"/>
+        <xacro:guide_wheel prefix="left_back" x_offset="-0.24" y_offset="0.1" z_offset="-0.08"/>
+        <xacro:guide_wheel prefix="right_back" x_offset="-0.24" y_offset="-0.1" z_offset="-0.08"/>
+
+    </xacro:macro>
+
+</robot>

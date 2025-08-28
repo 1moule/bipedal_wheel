@@ -1,0 +1,70 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="max_effort" value="40"/>
+    <xacro:property name="max_velocity" value="10.46"/>
+    <xacro:property name="calf_upper_limit" value="0."/>
+    <xacro:property name="calf_lower_limit" value="-2."/>
+
+    <xacro:macro name="leg" params="prefix connected_to pitch_offset leg_x_offset leg_y_offset leg_z_offset">
+        <link name="${prefix}_thigh">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://bipedal_description/meshes/first_leg.stl"/>
+                </geometry>
+            </visual>
+            <inertial>
+                <mass value="0.116"/>
+                <origin xyz="0.000354 0.006 -0.067161"/>
+                <inertia ixx="3.922e-4" ixy="-9.1e-12" ixz="4.457e-6" iyy="4.316e-4" iyz="1.581e-9"
+                         izz="4.2181e-5"/>
+            </inertial>
+        </link>
+        <joint name="${prefix}_hip_joint" type="revolute">
+            <axis xyz="0 1 0"/>
+            <origin xyz="${leg_x_offset} ${leg_y_offset} ${leg_z_offset}" rpy="0 ${pitch_offset} 0"/>
+            <parent link="${connected_to}"/>
+            <child link="${prefix}_thigh"/>
+            <dynamics damping="0.0" friction="0.001"/>
+            <limit effort="${max_effort}" velocity="${max_velocity}" lower="-1e10" upper="1e10"/>
+        </joint>
+
+        <link name="${prefix}_calf">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://bipedal_description/meshes/second_leg.stl"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0.0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://bipedal_description/meshes/second_leg.stl"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.193603"/>
+                <origin xyz="0.000074 0.006 -0.123983"/>
+                <inertia ixx="1.639e-3" ixy="-1.067e-16" ixz="6.533e-7" iyy="1.709e-3" iyz="0.0"
+                         izz="7.4906e-5"/>
+            </inertial>
+        </link>
+        <joint name="${prefix}_knee_joint" type="revolute">
+            <axis xyz="0 1 0"/>
+            <origin xyz="0 0 -0.15" rpy="0 -${pi/4} 0"/>
+            <parent link="${prefix}_thigh"/>
+            <child link="${prefix}_calf"/>
+            <dynamics damping="0.0" friction="0.001"/>
+            <limit effort="${max_effort}" velocity="${max_velocity}" lower="${calf_lower_limit}"
+                   upper="${calf_upper_limit}"/>
+        </joint>
+
+        <link name="${prefix}_foot"/>
+        <joint name="${prefix}_foot_fixed" type="fixed" dont_collapse="true">
+            <origin rpy="0 0 0" xyz="0 0 -0.27"/>
+            <parent link="${prefix}_calf"/>
+            <child link="${prefix}_foot"/>
+        </joint>
+    </xacro:macro>
+
+</robot>
