@@ -45,6 +45,8 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
     *std::get<2>(t) = joint_interface->getHandle(*std::get<1>(t));
   }
 
+  ramp_x_ = std::make_unique<RampFilter>(4., 0.001);
+  ramp_w_ = std::make_unique<RampFilter>(10., 0.001);
   model_params_ = std::make_unique<ModelParams>();
 
   if (!setupModelParams(controller_nh) || !setupPID(controller_nh) || !setupLQR(controller_nh))
@@ -52,29 +54,30 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 
   auto legCmdCallback = [this](const std_msgs::Float64::ConstPtr msg) { legCmd_ = *msg; };
   leg_cmd_sub_ = controller_nh.subscribe<std_msgs::Float64>("/leg_command", 1, legCmdCallback);
-  auto velCmdCallback = [this](const geometry_msgs::TwistStamped::ConstPtr& msg) { vel_cmd_ = *msg; };
-  vel_cmd_sub_ = controller_nh.subscribe<geometry_msgs::TwistStamped>("/cmd_vel", 1, velCmdCallback);
+  auto velCmdCallback = [this](const geometry_msgs::Twist::ConstPtr& msg) {
+    vel_cmd_ = *msg;
+    cmd_update_time_ = ros::Time::now();
+  };
+  vel_cmd_sub_ = controller_nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 1, velCmdCallback);
 
   return true;
 }
 
 void BipedalController::update(const ros::Time& time, const ros::Duration& period)
 {
-  if ((time - vel_cmd_.header.stamp).toSec() > 0.1)
+  if ((time - cmd_update_time_).toSec() > 0.1)
   {
-    vel_cmd_.twist.linear.x = 0.;
-    vel_cmd_.twist.linear.y = 0.;
-    vel_cmd_.twist.angular.z = 0.;
+    ramp_vel_cmd_.x = 0.;
+    ramp_vel_cmd_.y = 0.;
+    ramp_vel_cmd_.z = 0.;
   }
-  //  } else {
-  //    ramp_x_->setAcc(cmd_chassis.accel.linear.x);
-  //    ramp_y_->setAcc(cmd_chassis.accel.linear.y);
-  //    ramp_x_->input(cmd_vel.linear.x);
-  //    ramp_y_->input(cmd_vel.linear.y);
-  //    vel_cmd_.x = ramp_x_->output();
-  //    vel_cmd_.y = ramp_y_->output();
-  //    vel_cmd_.z = cmd_vel.angular.z;
-  //  }
+  else
+  {
+    ramp_x_->input(vel_cmd_.linear.x);
+    ramp_w_->input(vel_cmd_.angular.z);
+    ramp_vel_cmd_.x = ramp_x_->output();
+    ramp_vel_cmd_.z = ramp_w_->output();
+  }
   moveJoint(time, period);
 }
 
@@ -152,7 +155,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   // update state
   x_left_[3] =
       (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-  if (abs(x_left_[3]) < 0.2 && vel_cmd_.twist.linear.x == 0.)
+  if (abs(x_left_[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
     x_left_[2] += x_left_[3] * period.toSec();
   else
     x_left_[2] = 0.;
@@ -199,7 +202,7 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
     complete_stand_ = true;
 
   // PID
-  double T_yaw = pid_yaw_vel_.computeCommand(vel_cmd_.twist.angular.z - angular_vel_base_.z, period);
+  double T_yaw = pid_yaw_vel_.computeCommand(ramp_vel_cmd_.z - angular_vel_base_.z, period);
   double T_theta_diff = pid_theta_diff_.computeCommand(left_pos_[1] - right_pos_[1], period);
   double T_roll = pid_roll_.computeCommand(0. - roll_, period);
 
@@ -218,8 +221,8 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   auto x_right = x_right_;
   if (complete_stand_)
   {
-    x_left(3) -= vel_cmd_.twist.linear.x;
-    x_right(3) -= vel_cmd_.twist.linear.x;
+    x_left(3) -= ramp_vel_cmd_.x;
+    x_right(3) -= ramp_vel_cmd_.x;
   }
   u_left = k_left * (-x_left);
   u_right = k_right * (-x_right);
@@ -259,12 +262,10 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   }
   else
   {
-    double left_length_des = complete_stand_ ? 0.18 / cos(x_left[0]) : 0.18;
-    double right_length_des = complete_stand_ ? 0.18 / cos(x_right[0]) : 0.18;
-    F_leg[0] =
-        pid_left_leg_.computeCommand(left_length_des - left_pos_[0], period) + gravity * cos(left_pos_[1]) + T_roll;
-    F_leg[1] =
-        pid_right_leg_.computeCommand(right_length_des - right_pos_[0], period) + gravity * cos(right_pos_[1]) - T_roll;
+    //    double left_length_des = complete_stand_ ? 0.18 / cos(x_left[0]) : 0.18;
+    //    double right_length_des = complete_stand_ ? 0.18 / cos(x_right[0]) : 0.18;
+    F_leg[0] = pid_left_leg_.computeCommand(0.18 - left_pos_[0], period) + gravity * cos(left_pos_[1]) + T_roll;
+    F_leg[1] = pid_right_leg_.computeCommand(0.18 - right_pos_[0], period) + gravity * cos(right_pos_[1]) - T_roll;
   }
   double left_T[2], right_T[2];
   leg_conv(F_leg[0], -u_left(1) + T_theta_diff, left_angle[0], left_angle[1], left_T);

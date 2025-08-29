@@ -5,6 +5,7 @@
 #pragma once
 
 #include <bipedal_wheel_common/lqr.h>
+#include <bipedal_wheel_common/filter.h>
 #include <control_toolbox/pid.h>
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -66,10 +67,12 @@ private:
   bool complete_first_shrink_ = false, complete_elongation_ = false, complete_second_shrink_ = false,
        start_jump_ = false;
 
+  // handles
   hardware_interface::ImuSensorHandle imu_handle_;
   hardware_interface::JointHandle left_wheel_joint_handle_, right_wheel_joint_handle_, left_first_leg_joint_handle_,
       left_second_leg_joint_handle_, right_first_leg_joint_handle_, right_second_leg_joint_handle_;
 
+  // pid
   control_toolbox::Pid pid_yaw_vel_, pid_left_leg_, pid_right_leg_, pid_theta_diff_, pid_roll_;
   control_toolbox::Pid pid_left_leg_theta_, pid_right_leg_theta_;
   control_toolbox::Pid pid_left_wheel_vel_, pid_right_wheel_vel_;
@@ -78,11 +81,16 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
+  // ROS Interface
   ros::Subscriber leg_cmd_sub_, vel_cmd_sub_;
-  geometry_msgs::TwistStamped vel_cmd_;
-  std_msgs::Float64 legCmd_;
-  geometry_msgs::Vector3 angular_vel_base_, linear_acc_base_;
-  double roll_, pitch_, yaw_;
-  double leg_length_;
+  geometry_msgs::Twist vel_cmd_{};
+  geometry_msgs::Vector3 ramp_vel_cmd_{};
+  std_msgs::Float64 legCmd_{};
+  ros::Time cmd_update_time_;
+
+  std::unique_ptr<RampFilter> ramp_x_, ramp_w_;
+  geometry_msgs::Vector3 angular_vel_base_{}, linear_acc_base_{};
+  double roll_{}, pitch_{}, yaw_{};
+  double leg_length_{};
 };
 }  // namespace bipedal_wheel_controller
