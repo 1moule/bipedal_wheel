@@ -1,0 +1,9 @@
+<library path="lib/libbipedal_hw_sim">
+    <class
+            name="bipedal_wheel_gazebo/BipedalHWSim" type="bipedal_wheel_gazebo::BipedalHWSim"
+            base_class_type="gazebo_ros_control::RobotHWSim">
+        <description>
+            The bipedal wheel robot simulation interface.
+        </description>
+    </class>
+</library>

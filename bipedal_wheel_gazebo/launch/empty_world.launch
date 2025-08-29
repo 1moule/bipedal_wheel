@@ -1,0 +1,22 @@
+<launch>
+    <arg name="paused" default="false"/>
+    <arg name="add_wheel" default="true"/>
+
+    <rosparam file="$(find bipedal_wheel_gazebo)/config/default.yaml" command="load"/>
+
+    <param name="robot_description"
+           command="$(find xacro)/xacro $(find bipedal_wheel_description)/urdf/bipedal.urdf.xacro use_simulation:=true
+           add_wheel:=$(arg add_wheel)"/>
+
+    <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="world_name" value="$(find bipedal_wheel_gazebo)/worlds/empty.world"/>
+    </include>
+
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" clear_params="true"
+          args="-z 0.5 -param robot_description -urdf -model bipedal" output="screen"/>
+
+</launch>
+
