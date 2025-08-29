@@ -275,7 +275,9 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   k_left_unstick.setZero();
   k_right_unstick.setZero();
   k_left_unstick(1, 0) = k_left(1, 0);
+  k_left_unstick(1, 1) = k_left(1, 1);
   k_right_unstick(1, 1) = k_right(1, 1);
+  k_right_unstick(1, 0) = k_right(1, 0);
   bool left_unstick =
       unstickDetection(left_first_leg_joint_handle_.getEffort(), left_second_leg_joint_handle_.getEffort(),
                        left_wheel_joint_handle_.getEffort(), left_angle[0], left_angle[1], left_pos_[0],
