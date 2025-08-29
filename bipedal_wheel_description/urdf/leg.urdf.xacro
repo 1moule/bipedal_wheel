@@ -26,6 +26,7 @@
             <parent link="${connected_to}"/>
             <child link="${prefix}_thigh"/>
             <limit effort="${max_effort}" velocity="${max_velocity}" lower="-1e10" upper="1e10"/>
+            <safety_controller k_position="100" k_velocity="1" soft_lower_limit="-1e10" soft_upper_limit="1e10"/>
         </joint>
 
         <link name="${prefix}_calf">
