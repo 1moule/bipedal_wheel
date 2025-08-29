@@ -60,7 +60,7 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 
 void BipedalController::update(const ros::Time& time, const ros::Duration& period)
 {
-  if ((time - vel_cmd_.header.stamp).toSec() > 0.01)
+  if ((time - vel_cmd_.header.stamp).toSec() > 0.1)
   {
     vel_cmd_.twist.linear.x = 0.;
     vel_cmd_.twist.linear.y = 0.;
@@ -450,6 +450,8 @@ bool BipedalController::setupLQR(ros::NodeHandle& controller_nh)
   Eigen::VectorXd r_diag = loadWeightMatrix(controller_nh, "r", CONTROL_DIM);
   if (!q_diag.allFinite() || !r_diag.allFinite())
     return false;
+  q_.setZero();
+  r_.setZero();
   q_.diagonal() = q_diag;
   r_.diagonal() = r_diag;
 

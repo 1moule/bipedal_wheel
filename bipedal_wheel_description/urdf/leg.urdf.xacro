@@ -25,7 +25,6 @@
             <origin xyz="${leg_x_offset} ${leg_y_offset} ${leg_z_offset}" rpy="0 ${pitch_offset} 0"/>
             <parent link="${connected_to}"/>
             <child link="${prefix}_thigh"/>
-            <dynamics damping="0.0" friction="0.001"/>
             <limit effort="${max_effort}" velocity="${max_velocity}" lower="-1e10" upper="1e10"/>
         </joint>
 
@@ -59,12 +58,7 @@
                    upper="${calf_upper_limit}"/>
         </joint>
 
-        <link name="${prefix}_foot"/>
-        <joint name="${prefix}_foot_fixed" type="fixed" dont_collapse="true">
-            <origin rpy="0 0 0" xyz="0 0 -0.27"/>
-            <parent link="${prefix}_calf"/>
-            <child link="${prefix}_foot"/>
-        </joint>
+
     </xacro:macro>
 
 </robot>

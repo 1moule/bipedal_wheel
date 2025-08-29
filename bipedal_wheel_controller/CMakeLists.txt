@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(bipedal_wheel_controller)
 
+add_definitions(-Wno-enum-compare)
+
 ## Use C++14
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
