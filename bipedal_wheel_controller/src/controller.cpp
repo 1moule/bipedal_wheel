@@ -132,7 +132,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   tf2::doTransform(acc, linear_acc_base_, tf_msg);
 
   // vmc
-  // [0]:first_vmc_joint [1]:second_vmc_joint
+  // [0]:hip_vmc_joint [1]:knee_vmc_joint
   left_angle[0] = left_first_leg_joint_handle_.getPosition() + M_PI / 2.;
   left_angle[1] = left_second_leg_joint_handle_.getPosition() - M_PI / 4.;
   right_angle[0] = right_first_leg_joint_handle_.getPosition() + M_PI / 2.;
