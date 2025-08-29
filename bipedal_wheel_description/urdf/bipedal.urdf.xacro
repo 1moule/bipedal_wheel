@@ -6,15 +6,15 @@
 
     <xacro:include filename="$(find bipedal_wheel_description)/urdf/chassis.urdf.xacro"/>
     <xacro:chassis use_simulation="$(arg use_simulation)" add_wheel="$(arg add_wheel)"/>
-    <xacro:include filename="$(find rm_description)/urdf/common/imu.urdf.xacro"/>
+    <xacro:include filename="$(find bipedal_wheel_description)/urdf/imu.urdf.xacro"/>
     <xacro:IMU connected_to="base_link" imu_name="base_imu" xyz="0 0 0"
                rpy="0 0 -${pi}"/>
 
     <xacro:if value="$(arg use_simulation)">
         <gazebo>
-            <plugin name="rm_ros_control" filename="librm_robot_hw_sim.so">
+            <plugin name="gazebo_ros_control" filename="libbipedal_hw_sim.so">
                 <robotNamespace>/</robotNamespace>
-                <robotSimType>rm_gazebo/RmRobotHWSim</robotSimType>
+                <robotSimType>bipedal_wheel_gazebo/BipedalHWSim</robotSimType>
             </plugin>
         </gazebo>
     </xacro:if>
