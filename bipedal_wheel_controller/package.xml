@@ -40,6 +40,7 @@
     <depend>controller_interface</depend>
     <depend>effort_controllers</depend>
     <depend>angles</depend>
+    <depend>tf2_ros</depend>
 
     <exec_depend>robot_localization</exec_depend>
 

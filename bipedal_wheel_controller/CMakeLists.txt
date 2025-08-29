@@ -18,6 +18,7 @@ find_package(catkin REQUIRED
         controller_interface
         effort_controllers
         angles
+        tf2_ros
 )
 
 find_package(Eigen3 REQUIRED)
@@ -44,6 +45,7 @@ catkin_package(
         controller_interface
         effort_controllers
         angles
+        tf2_ros
         LIBRARIES ${PROJECT_NAME}
 )
 

@@ -17,10 +17,6 @@
 
 namespace bipedal_wheel_controller
 {
-BipedalController::BipedalController() : tf_listener_(tf_buffer_)
-{
-}
-
 bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& root_nh,
                              ros::NodeHandle& controller_nh)
 {
@@ -48,6 +44,8 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 
   ramp_x_ = std::make_unique<RampFilter>(4., 0.001);
   ramp_w_ = std::make_unique<RampFilter>(10., 0.001);
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(ros::Duration(10));
+  tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
   model_params_ = std::make_unique<ModelParams>();
 
   if (!setupModelParams(controller_nh) || !setupPID(controller_nh) || !setupLQR(controller_nh))
@@ -94,7 +92,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   acc.z = imu_handle_.getLinearAcceleration()[2];
   try
   {
-    tf2::doTransform(gyro, angular_vel_base_, tf_buffer_.lookupTransform("base_link", imu_handle_.getFrameId(), time));
+    tf2::doTransform(gyro, angular_vel_base_, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
   }
   catch (tf2::TransformException& ex)
   {
@@ -105,7 +103,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   try
   {
     geometry_msgs::TransformStamped tf_msg;
-    tf_msg = tf_buffer_.lookupTransform(imu_handle_.getFrameId(), "base_link", time);
+    tf_msg = tf_buffer_->lookupTransform(imu_handle_.getFrameId(), "base_link", time);
     tf2::fromMsg(tf_msg.transform, imu2base);
   }
   catch (tf2::TransformException& ex)

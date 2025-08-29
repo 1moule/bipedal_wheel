@@ -35,7 +35,7 @@ class BipedalController
   };
 
 public:
-  BipedalController();
+  BipedalController() = default;
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& root_nh, ros::NodeHandle& controller_nh) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void stopping(const ros::Time& time) override;
@@ -79,8 +79,8 @@ private:
   control_toolbox::Pid pid_left_wheel_vel_, pid_right_wheel_vel_;
 
   // transform
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tf_listener_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // ROS Interface
   ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;
