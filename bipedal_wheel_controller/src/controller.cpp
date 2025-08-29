@@ -70,17 +70,16 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
 {
   if ((time - cmd_update_time_).toSec() > 0.1)
   {
-    ramp_vel_cmd_.x = 0.;
-    ramp_vel_cmd_.y = 0.;
-    ramp_vel_cmd_.z = 0.;
+    ramp_x_->input(0.);
+    ramp_w_->input(0.);
   }
   else
   {
     ramp_x_->input(vel_cmd_.linear.x);
     ramp_w_->input(vel_cmd_.angular.z);
-    ramp_vel_cmd_.x = ramp_x_->output();
-    ramp_vel_cmd_.z = ramp_w_->output();
   }
+  ramp_vel_cmd_.x = ramp_x_->output();
+  ramp_vel_cmd_.z = ramp_w_->output();
   moveJoint(time, period);
 }
 
