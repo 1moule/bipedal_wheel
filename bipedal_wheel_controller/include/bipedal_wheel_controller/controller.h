@@ -13,6 +13,7 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
@@ -82,10 +83,11 @@ private:
   tf2_ros::TransformListener tf_listener_;
 
   // ROS Interface
-  ros::Subscriber leg_cmd_sub_, vel_cmd_sub_;
+  ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;
+  std_msgs::Float64 legCmd_{};
+  std_msgs::Bool jumpCmd_{};
   geometry_msgs::Twist vel_cmd_{};
   geometry_msgs::Vector3 ramp_vel_cmd_{};
-  std_msgs::Float64 legCmd_{};
   ros::Time cmd_update_time_;
 
   std::unique_ptr<RampFilter> ramp_x_, ramp_w_;

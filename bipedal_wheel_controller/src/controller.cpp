@@ -55,6 +55,8 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 
   auto legCmdCallback = [this](const std_msgs::Float64::ConstPtr msg) { legCmd_ = *msg; };
   leg_cmd_sub_ = controller_nh.subscribe<std_msgs::Float64>("/leg_command", 1, legCmdCallback);
+  auto jumpCmdCallback = [this](const std_msgs::Bool::ConstPtr msg) { jumpCmd_ = *msg; };
+  jump_cmd_sub_ = controller_nh.subscribe<std_msgs::Bool>("/jump_command", 1, jumpCmdCallback);
   auto velCmdCallback = [this](const geometry_msgs::Twist::ConstPtr& msg) {
     vel_cmd_ = *msg;
     cmd_update_time_ = ros::Time::now();
@@ -225,7 +227,8 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   double gravity = 1. / 2. * model_params_->M * model_params_->g;
   Eigen::Matrix<double, 2, 1> F_leg;
   double leg_length_des = leg_length_;
-  //  if (!start_jump_ && legCmd_.jump && abs(x_left[0]) < 0.1) start_jump_ = true;
+  if (!start_jump_ && jumpCmd_.data && abs(x_left[0]) < 0.1)
+    start_jump_ = true;
   if (start_jump_)
   {
     if (!complete_first_shrink_)
@@ -245,7 +248,7 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
       complete_first_shrink_ = false;
       complete_elongation_ = false;
       complete_second_shrink_ = false;
-      //      legCmd_.jump = false;
+      jumpCmd_.data = false;
       start_jump_ = false;
       ROS_INFO("[balance] Jump finished");
     }
@@ -256,10 +259,12 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   }
   else
   {
-    //    double left_length_des = complete_stand_ ? 0.18 / cos(x_left[0]) : 0.18;
-    //    double right_length_des = complete_stand_ ? 0.18 / cos(x_right[0]) : 0.18;
-    F_leg[0] = pid_left_leg_.computeCommand(0.18 - left_pos_[0], period) + gravity * cos(left_pos_[1]) + T_roll;
-    F_leg[1] = pid_right_leg_.computeCommand(0.18 - right_pos_[0], period) + gravity * cos(right_pos_[1]) - T_roll;
+    double left_length_des = complete_stand_ && legCmd_.data != 0. ? legCmd_.data / cos(x_left[0]) : 0.18;
+    double right_length_des = complete_stand_ && legCmd_.data != 0. ? legCmd_.data / cos(x_right[0]) : 0.18;
+    F_leg[0] =
+        pid_left_leg_.computeCommand(left_length_des - left_pos_[0], period) + gravity * cos(left_pos_[1]) + T_roll;
+    F_leg[1] =
+        pid_right_leg_.computeCommand(right_length_des - right_pos_[0], period) + gravity * cos(right_pos_[1]) - T_roll;
   }
   double left_T[2], right_T[2];
   leg_conv(F_leg[0], -u_left(1) + T_theta_diff, left_angle[0], left_angle[1], left_T);
@@ -298,7 +303,7 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
     complete_first_shrink_ = false;
     complete_elongation_ = false;
     complete_second_shrink_ = false;
-    //    legCmd_.jump = false;
+    jumpCmd_.data = false;
     left_wheel_joint_handle_.setCommand(0.);
     right_wheel_joint_handle_.setCommand(0.);
     left_first_leg_joint_handle_.setCommand(0.);
