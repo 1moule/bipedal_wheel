@@ -226,7 +226,7 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   // Leg control
   double gravity = 1. / 2. * model_params_->M * model_params_->g;
   Eigen::Matrix<double, 2, 1> F_leg;
-  double leg_length_des = leg_length_;
+  double leg_length_des = legCmd_.data == 0 ? 0.18 : legCmd_.data;
   if (!start_jump_ && jumpCmd_.data && abs(x_left[0]) < 0.1)
     start_jump_ = true;
   if (start_jump_)
@@ -259,8 +259,8 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   }
   else
   {
-    double left_length_des = complete_stand_ && legCmd_.data != 0. ? legCmd_.data / cos(x_left[0]) : 0.18;
-    double right_length_des = complete_stand_ && legCmd_.data != 0. ? legCmd_.data / cos(x_right[0]) : 0.18;
+    double left_length_des = complete_stand_ ? leg_length_des / cos(x_left[0]) : 0.18;
+    double right_length_des = complete_stand_ ? leg_length_des / cos(x_right[0]) : 0.18;
     F_leg[0] =
         pid_left_leg_.computeCommand(left_length_des - left_pos_[0], period) + gravity * cos(left_pos_[1]) + T_roll;
     F_leg[1] =
