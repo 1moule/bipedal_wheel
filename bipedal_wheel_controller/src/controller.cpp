@@ -13,6 +13,7 @@
 
 #include "bipedal_wheel_controller/vmc/leg_conv.h"
 #include "bipedal_wheel_controller/vmc/leg_spd.h"
+#include "bipedal_wheel_controller/vmc/leg_pos.h"
 
 namespace bipedal_wheel_controller
 {
@@ -138,15 +139,8 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   right_angle[0] = right_first_leg_joint_handle_.getPosition() + M_PI / 2.;
   right_angle[1] = right_second_leg_joint_handle_.getPosition() - M_PI / 4.;
   // [0] is length, [1] is angle
-  double l1 = 0.15, l2 = 0.27;
-  double xc_left = l1 * sin(left_angle[0]) + l2 * sin(left_angle[0] + left_angle[1]);
-  double yc_left = l1 * cos(left_angle[0]) + l2 * cos(left_angle[0] + left_angle[1]);
-  double xc_right = l1 * sin(right_angle[0]) + l2 * sin(right_angle[0] + right_angle[1]);
-  double yc_right = l1 * cos(right_angle[0]) + l2 * cos(right_angle[0] + right_angle[1]);
-  left_pos_[0] = sqrt(xc_left * xc_left + yc_left * yc_left);
-  left_pos_[1] = (atan2(xc_left, yc_left));
-  right_pos_[0] = sqrt(xc_right * xc_right + yc_right * yc_right);
-  right_pos_[1] = (atan2(xc_right, yc_right));
+  leg_pos(left_angle[0], left_angle[1], left_pos_);
+  leg_pos(right_angle[0], right_angle[1], right_pos_);
   leg_spd(left_first_leg_joint_handle_.getVelocity(), left_second_leg_joint_handle_.getVelocity(), left_angle[0],
           left_angle[1], left_spd_);
   leg_spd(right_first_leg_joint_handle_.getVelocity(), right_second_leg_joint_handle_.getVelocity(), right_angle[0],

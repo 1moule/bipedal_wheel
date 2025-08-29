@@ -2,7 +2,7 @@
  * File: leg_pos.h
  *
  * MATLAB Coder version            : 5.5
- * C/C++ source code generated on  : 04-Jun-2024 22:15:34
+ * C/C++ source code generated on  : 29-Aug-2025 12:36:02
  */
 
 #ifndef LEG_POS_H
@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 /* Function Declarations */
-extern void leg_pos(double phi1, double phi4, double pos[2]);
+extern void leg_pos(double phi1, double phi2, double pos[2]);
 
 #ifdef __cplusplus
 }
