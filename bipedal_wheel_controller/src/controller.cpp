@@ -228,23 +228,12 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
     start_jump_ = true;
   if (start_jump_)
   {
-    if (!complete_first_shrink_)
-      leg_length_des = 0.15;
-    if (!complete_first_shrink_ && abs(0.15 - left_pos_[0]) < 0.02)
-      complete_first_shrink_ = true;
-    if (complete_first_shrink_ && !complete_elongation_)
-      leg_length_des = 0.4;
-    if (complete_first_shrink_ && !complete_elongation_ && abs(0.4 - left_pos_[0]) < 0.02)
-      complete_elongation_ = true;
-    if (complete_elongation_ && !complete_second_shrink_)
-      leg_length_des = 0.15;
-    if (complete_elongation_ && !complete_second_shrink_ && abs(0.15 - left_pos_[0]) < 0.02)
-      complete_second_shrink_ = true;
-    if (complete_second_shrink_)
+    leg_length_des = jumpLengthDes[jump_phase_].second;
+    if (std::abs(leg_length_des - left_pos_[0]) < 0.02)
+      jump_phase_ += 1;
+    if (jump_phase_ == JumpPhase::DONE)
     {
-      complete_first_shrink_ = false;
-      complete_elongation_ = false;
-      complete_second_shrink_ = false;
+      jump_phase_ = JumpPhase::SQUAT;
       jumpCmd_.data = false;
       start_jump_ = false;
       ROS_INFO("[balance] Jump finished");

@@ -18,6 +18,7 @@
 #include <tf2_ros/transform_listener.h>
 
 #include "bipedal_wheel_controller/helper_functions.h"
+#include "bipedal_wheel_controller/definitions.h"
 
 namespace bipedal_wheel_controller
 {
@@ -62,11 +63,11 @@ private:
 
   // stand up
   int left_leg_state, right_leg_state;
-  bool leg_under_body_ = false, leg_front_body_ = false, leg_behind_body_ = false, complete_stand_ = false;
+  bool complete_stand_ = false;
 
   // jump
-  bool complete_first_shrink_ = false, complete_elongation_ = false, complete_second_shrink_ = false,
-       start_jump_ = false;
+  int jump_phase_ = JumpPhase::SQUAT;
+  bool start_jump_ = false;
 
   // handles
   hardware_interface::ImuSensorHandle imu_handle_;

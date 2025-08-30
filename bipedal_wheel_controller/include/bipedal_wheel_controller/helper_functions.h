@@ -14,34 +14,10 @@
 #include "bipedal_wheel_controller/dynamics/gen_A.h"
 #include "bipedal_wheel_controller/dynamics/gen_B.h"
 #include "bipedal_wheel_controller/vmc/leg_conv_fwd.h"
+#include "bipedal_wheel_controller/definitions.h"
 
 namespace bipedal_wheel_controller
 {
-constexpr static const int STATE_DIM = 6;
-constexpr static const int CONTROL_DIM = 2;
-
-struct ModelParams
-{
-  double L_weight;   // Length weight to wheel axis
-  double Lm_weight;  // Length weight to mass center
-  double l;          // Leg rest length
-  double m_w;        // Wheel mass
-  double m_p;        // Leg mass
-  double M;          // Body mass
-  double i_w;        // Wheel inertia
-  double i_p;        // Leg inertia
-  double i_m;        // Body inertia
-  double r;          // Wheel radius
-  double g;          // Gravity acceleration
-};
-
-enum LegState
-{
-  UNDER,
-  FRONT,
-  BEHIND
-};
-
 /**
  * Generate continuous-time state space matrices A and B
  * @param model_params
