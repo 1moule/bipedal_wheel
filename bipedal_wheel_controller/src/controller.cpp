@@ -225,7 +225,10 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   Eigen::Matrix<double, 2, 1> F_leg;
   double leg_length_des = legCmd_.data == 0 ? 0.18 : legCmd_.data;
   if (!start_jump_ && jumpCmd_.data && abs(x_left[0]) < 0.1)
+  {
     start_jump_ = true;
+    ROS_INFO("[balance] Jump start");
+  }
   if (start_jump_)
   {
     leg_length_des = jumpLengthDes[jump_phase_].second;
@@ -374,6 +377,13 @@ void BipedalController::stopping(const ros::Time& time)
 {
   balance_mode_ = BalanceMode::STAND_UP;
   balance_state_changed_ = false;
+  left_wheel_joint_handle_.setCommand(0.);
+  right_wheel_joint_handle_.setCommand(0.);
+  left_first_leg_joint_handle_.setCommand(0.);
+  left_second_leg_joint_handle_.setCommand(0.);
+  right_first_leg_joint_handle_.setCommand(0.);
+  right_second_leg_joint_handle_.setCommand(0.);
+  ROS_INFO("[balance] Controller Stop");
 }
 
 bool BipedalController::setupModelParams(ros::NodeHandle& controller_nh)
