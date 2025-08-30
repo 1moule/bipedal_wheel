@@ -288,9 +288,6 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   {
     balance_mode_ = BalanceMode::SIT_DOWN;
     balance_state_changed_ = false;
-    complete_first_shrink_ = false;
-    complete_elongation_ = false;
-    complete_second_shrink_ = false;
     jumpCmd_.data = false;
     left_wheel_joint_handle_.setCommand(0.);
     right_wheel_joint_handle_.setCommand(0.);
