@@ -260,10 +260,9 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   Eigen::Matrix<double, CONTROL_DIM, STATE_DIM> k_left_unstick{}, k_right_unstick{};
   k_left_unstick.setZero();
   k_right_unstick.setZero();
-  k_left_unstick(1, 0) = k_left(1, 0);
-  k_left_unstick(1, 1) = k_left(1, 1);
-  k_right_unstick(1, 1) = k_right(1, 1);
-  k_right_unstick(1, 0) = k_right(1, 0);
+  k_left_unstick.block<1, 2>(1, 0) = k_left.block<1, 2>(1, 0);
+  k_right_unstick.block<1, 2>(1, 0) = k_right.block<1, 2>(1, 0);
+  ROS_INFO_STREAM(k_left_unstick << "\n" << k_right_unstick);
   bool left_unstick =
       unstickDetection(left_first_leg_joint_handle_.getEffort(), left_second_leg_joint_handle_.getEffort(),
                        left_wheel_joint_handle_.getEffort(), left_angle[0], left_angle[1], left_pos_[0],
