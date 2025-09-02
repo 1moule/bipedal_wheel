@@ -217,7 +217,7 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
   u_left = k_left * (-x_left);
   u_right = k_right * (-x_right);
 
-  // Leg control
+  // Compute leg thrust
   double gravity = 1. / 2. * model_params_->M * model_params_->g;
   Eigen::Matrix<double, 2, 1> F_leg;
   double leg_length_des = legCmd_.data == 0 ? 0.18 : legCmd_.data;
@@ -252,9 +252,6 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
     F_leg[1] =
         pid_right_leg_.computeCommand(right_length_des - right_pos_[0], period) + gravity * cos(right_pos_[1]) - T_roll;
   }
-  double left_T[2], right_T[2];
-  leg_conv(F_leg[0], -u_left(1) + T_theta_diff, left_angle[0], left_angle[1], left_T);
-  leg_conv(F_leg[1], -u_right(1) - T_theta_diff, right_angle[0], right_angle[1], right_T);
 
   // Unstick detection
   Eigen::Matrix<double, CONTROL_DIM, STATE_DIM> k_left_unstick{}, k_right_unstick{};
@@ -271,17 +268,21 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
                        right_wheel_joint_handle_.getEffort(), right_angle[0], right_angle[1], right_pos_[0],
                        linear_acc_base_.z, model_params_, x_right_);
   if (left_unstick)
-  {
     u_left = k_left_unstick * (-x_left);
-    leg_conv(F_leg[0], -u_left(1) + T_theta_diff, left_angle[0], left_angle[1], left_T);
-  }
   if (right_unstick)
-  {
     u_right = k_right_unstick * (-x_right);
-    leg_conv(F_leg[1], -u_right(1) - T_theta_diff, right_angle[0], right_angle[1], right_T);
-  }
 
-  // control
+  // Control
+  double left_T[2], right_T[2];
+  leg_conv(F_leg[0], -u_left(1) + T_theta_diff, left_angle[0], left_angle[1], left_T);
+  leg_conv(F_leg[1], -u_right(1) - T_theta_diff, right_angle[0], right_angle[1], right_T);
+  double left_wheel_cmd = left_unstick ? 0. : u_left(0) - T_yaw;
+  double right_wheel_cmd = right_unstick ? 0. : u_right(0) + T_yaw;
+  LegCommand left_cmd = { F_leg[0], u_left[1], { left_T[0], left_T[1] } },
+             right_cmd = { F_leg[1], u_right[1], { right_T[0], right_T[1] } };
+  setJointCommands(joint_handles_, left_cmd, right_cmd, left_wheel_cmd, right_wheel_cmd);
+
+  // Protection
   if ((complete_stand_ && (abs(x_left(4)) > 0.4 || abs(x_left(0)) > 1.5)) || overturn_)
   {
     balance_mode_ = BalanceMode::SIT_DOWN;
@@ -289,14 +290,6 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
     jumpCmd_.data = false;
     setJointCommands(joint_handles_, { 0, 0, { 0., 0. } }, { 0, 0, { 0., 0. } });
     ROS_INFO("[balance] Exit NORMAL");
-  }
-  else
-  {
-    double left_wheel_cmd = left_unstick ? 0. : u_left(0) - T_yaw;
-    double right_wheel_cmd = right_unstick ? 0. : u_right(0) + T_yaw;
-    LegCommand left_cmd = { F_leg[0], u_left[1], { left_T[0], left_T[1] } },
-               right_cmd = { F_leg[1], u_right[1], { right_T[0], right_T[1] } };
-    setJointCommands(joint_handles_, left_cmd, right_cmd, left_wheel_cmd, right_wheel_cmd);
   }
 }
 
