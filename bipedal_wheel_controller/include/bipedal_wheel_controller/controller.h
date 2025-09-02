@@ -33,6 +33,7 @@ class BipedalController
     NORMAL,
     STAND_UP,
     SIT_DOWN,
+    RECOVER
   };
 
 public:
@@ -47,6 +48,7 @@ private:
   void normal(const ros::Time& time, const ros::Duration& period);
   void standUp(const ros::Time& time, const ros::Duration& period);
   void sitDown(const ros::Time& time, const ros::Duration& period);
+  void recover(const ros::Time& time, const ros::Duration& period);
   bool setupModelParams(ros::NodeHandle& controller_nh);
   bool setupPID(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
@@ -58,8 +60,9 @@ private:
 
   std::unique_ptr<ModelParams> model_params_;
 
-  int balance_mode_ = BalanceMode::STAND_UP;
+  int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
+  bool overturn_ = false;
 
   // stand up
   int left_leg_state, right_leg_state;

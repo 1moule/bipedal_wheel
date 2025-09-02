@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <geometry_msgs/Quaternion.h>
 
 #include "bipedal_wheel_controller/dynamics/gen_A.h"
 #include "bipedal_wheel_controller/dynamics/gen_B.h"
