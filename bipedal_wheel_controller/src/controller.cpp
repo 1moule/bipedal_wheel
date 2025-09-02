@@ -119,12 +119,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   catch (tf2::TransformException& ex)
   {
     ROS_WARN("%s", ex.what());
-    left_wheel_joint_handle_.setCommand(0.);
-    right_wheel_joint_handle_.setCommand(0.);
-    left_first_leg_joint_handle_.setCommand(0.);
-    left_second_leg_joint_handle_.setCommand(0.);
-    right_first_leg_joint_handle_.setCommand(0.);
-    right_second_leg_joint_handle_.setCommand(0.);
+    setJointCommands(joint_handles_, { 0, 0, { 0., 0. } }, { 0, 0, { 0., 0. } });
     return;
   }
 
@@ -294,22 +289,16 @@ void BipedalController::normal(const ros::Time& time, const ros::Duration& perio
     balance_mode_ = BalanceMode::SIT_DOWN;
     balance_state_changed_ = false;
     jumpCmd_.data = false;
-    left_wheel_joint_handle_.setCommand(0.);
-    right_wheel_joint_handle_.setCommand(0.);
-    left_first_leg_joint_handle_.setCommand(0.);
-    left_second_leg_joint_handle_.setCommand(0.);
-    right_first_leg_joint_handle_.setCommand(0.);
-    right_second_leg_joint_handle_.setCommand(0.);
+    setJointCommands(joint_handles_, { 0, 0, { 0., 0. } }, { 0, 0, { 0., 0. } });
     ROS_INFO("[balance] Exit NORMAL");
   }
   else
   {
-    left_wheel_joint_handle_.setCommand(left_unstick ? 0. : u_left(0) - T_yaw);
-    right_wheel_joint_handle_.setCommand(right_unstick ? 0. : u_right(0) + T_yaw);
-    left_first_leg_joint_handle_.setCommand(left_T[0]);
-    right_first_leg_joint_handle_.setCommand(right_T[0]);
-    left_second_leg_joint_handle_.setCommand(left_T[1]);
-    right_second_leg_joint_handle_.setCommand(right_T[1]);
+    double left_wheel_cmd = left_unstick ? 0. : u_left(0) - T_yaw;
+    double right_wheel_cmd = right_unstick ? 0. : u_right(0) + T_yaw;
+    LegCommand left_cmd = { F_leg[0], u_left[1], { left_T[0], left_T[1] } },
+               right_cmd = { F_leg[1], u_right[1], { right_T[0], right_T[1] } };
+    setJointCommands(joint_handles_, left_cmd, right_cmd, left_wheel_cmd, right_wheel_cmd);
   }
 }
 
@@ -380,15 +369,15 @@ void BipedalController::recover(const ros::Time& time, const ros::Duration& peri
   LegCommand left_cmd = { 0, 0, { 0., 0. } }, right_cmd = { 0, 0, { 0., 0. } };
   detectLegState(x_left_, left_leg_state);
   detectLegState(x_right_, right_leg_state);
-  if (left_leg_state != LegState::FRONT)
+  if (overturn_ && left_leg_state != LegState::FRONT)
     left_cmd = computePidLegCommand(0.4, -M_PI / 2 + 0.2, left_pos_[0], left_pos_[1], pid_left_leg_,
                                     pid_left_leg_theta_, left_angle, period);
-  if (right_leg_state != LegState::FRONT)
+  if (overturn_ && right_leg_state != LegState::FRONT)
     right_cmd = computePidLegCommand(0.4, -M_PI / 2 + 0.2, right_pos_[0], right_pos_[1], pid_right_leg_,
                                      pid_right_leg_theta_, right_angle, period);
   setJointCommands(joint_handles_, left_cmd, right_cmd);
 
-  if (left_leg_state == LegState::FRONT && right_leg_state == LegState::FRONT)
+  if ((overturn_ && left_leg_state == LegState::FRONT && right_leg_state == LegState::FRONT) || !overturn_)
   {
     balance_mode_ = BalanceMode::STAND_UP;
     balance_state_changed_ = false;
@@ -398,14 +387,10 @@ void BipedalController::recover(const ros::Time& time, const ros::Duration& peri
 
 void BipedalController::stopping(const ros::Time& time)
 {
-  balance_mode_ = BalanceMode::SIT_DOWN;
+  balance_mode_ = BalanceMode::RECOVER;
   balance_state_changed_ = false;
-  left_wheel_joint_handle_.setCommand(0.);
-  right_wheel_joint_handle_.setCommand(0.);
-  left_first_leg_joint_handle_.setCommand(0.);
-  left_second_leg_joint_handle_.setCommand(0.);
-  right_first_leg_joint_handle_.setCommand(0.);
-  right_second_leg_joint_handle_.setCommand(0.);
+  setJointCommands(joint_handles_, { 0, 0, { 0., 0. } }, { 0, 0, { 0., 0. } });
+
   ROS_INFO("[balance] Controller Stop");
 }
 
