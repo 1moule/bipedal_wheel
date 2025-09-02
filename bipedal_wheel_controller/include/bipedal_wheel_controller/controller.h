@@ -76,6 +76,7 @@ private:
   hardware_interface::ImuSensorHandle imu_handle_;
   hardware_interface::JointHandle left_wheel_joint_handle_, right_wheel_joint_handle_, left_first_leg_joint_handle_,
       left_second_leg_joint_handle_, right_first_leg_joint_handle_, right_second_leg_joint_handle_;
+  std::vector<hardware_interface::JointHandle*> joint_handles_;
 
   // pid
   control_toolbox::Pid pid_yaw_vel_, pid_left_leg_, pid_right_leg_, pid_theta_diff_, pid_roll_;

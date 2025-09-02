@@ -24,12 +24,12 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   std::string left_wheel_joint, right_wheel_joint, left_first_leg_joint, left_second_leg_joint, right_first_leg_joint,
       right_second_leg_joint;
   const std::tuple<const char*, std::string*, hardware_interface::JointHandle*> table[] = {
-    { "left/wheel_joint", &left_wheel_joint, &left_wheel_joint_handle_ },
-    { "right/wheel_joint", &right_wheel_joint, &right_wheel_joint_handle_ },
     { "left/first_leg_joint", &left_first_leg_joint, &left_first_leg_joint_handle_ },
-    { "right/first_leg_joint", &right_first_leg_joint, &right_first_leg_joint_handle_ },
     { "left/second_leg_joint", &left_second_leg_joint, &left_second_leg_joint_handle_ },
-    { "right/second_leg_joint", &right_second_leg_joint, &right_second_leg_joint_handle_ }
+    { "right/first_leg_joint", &right_first_leg_joint, &right_first_leg_joint_handle_ },
+    { "right/second_leg_joint", &right_second_leg_joint, &right_second_leg_joint_handle_ },
+    { "left/wheel_joint", &left_wheel_joint, &left_wheel_joint_handle_ },
+    { "right/wheel_joint", &right_wheel_joint, &right_wheel_joint_handle_ }
   };
   auto* joint_interface = robot_hw->get<hardware_interface::EffortJointInterface>();
   for (const auto& t : table)
@@ -40,6 +40,7 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
       return false;
     }
     *std::get<2>(t) = joint_interface->getHandle(*std::get<1>(t));
+    joint_handles_.push_back(std::get<2>(t));
   }
 
   ramp_x_ = std::make_unique<RampFilter>(4., 0.001);
@@ -110,7 +111,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
     tf_msg.transform = tf2::toMsg(odom2imu.inverse());
     tf_msg.header.stamp = time;
     tf2::doTransform(acc, linear_acc_base_, tf_msg);
-    
+
     tf2::Vector3 z_body(0, 0, 1);
     tf2::Vector3 z_world = tf2::quatRotate(odom2base.getRotation(), z_body);
     overturn_ = z_world.z() < 0;
@@ -322,24 +323,17 @@ void BipedalController::standUp(const ros::Time& time, const ros::Duration& peri
     detectLegState(x_left_, left_leg_state);
     detectLegState(x_right_, right_leg_state);
   }
-  Eigen::Matrix<double, 2, 1> F_leg;
-  double T_theta_l, T_theta_r, theta_des_l, theta_des_r, length_des_l, length_des_r;
+
+  double theta_des_l, theta_des_r, length_des_l, length_des_r;
+  LegCommand left_cmd = { 0, 0, { 0., 0. } }, right_cmd = { 0, 0, { 0., 0. } };
   setUpLegMotion(x_left_, right_leg_state, left_pos_[0], left_pos_[1], left_leg_state, theta_des_l, length_des_l);
   setUpLegMotion(x_right_, left_leg_state, right_pos_[0], right_pos_[1], right_leg_state, theta_des_r, length_des_r);
-  F_leg[0] = pid_left_leg_.computeCommand(length_des_l - left_pos_[0], period);
-  F_leg[1] = pid_right_leg_.computeCommand(length_des_r - right_pos_[0], period);
-  T_theta_l = pid_left_leg_theta_.computeCommand(-angles::shortest_angular_distance(theta_des_l, left_pos_[1]), period);
-  T_theta_r =
-      pid_right_leg_theta_.computeCommand(-angles::shortest_angular_distance(theta_des_r, right_pos_[1]), period);
-  double left_T[2], right_T[2];
-  leg_conv(F_leg[0], -T_theta_l, left_angle[0], left_angle[1], left_T);
-  leg_conv(F_leg[1], -T_theta_r, right_angle[0], right_angle[1], right_T);
-  left_first_leg_joint_handle_.setCommand(left_T[0]);
-  right_first_leg_joint_handle_.setCommand(right_T[0]);
-  left_second_leg_joint_handle_.setCommand(left_T[1]);
-  right_second_leg_joint_handle_.setCommand(right_T[1]);
-  left_wheel_joint_handle_.setCommand(0.);
-  right_wheel_joint_handle_.setCommand(0.);
+  left_cmd = computePidLegCommand(length_des_l, theta_des_l, left_pos_[0], left_pos_[1], pid_left_leg_,
+                                  pid_left_leg_theta_, left_angle, period);
+  right_cmd = computePidLegCommand(length_des_r, theta_des_r, right_pos_[0], right_pos_[1], pid_right_leg_,
+                                   pid_right_leg_theta_, right_angle, period);
+  setJointCommands(joint_handles_, left_cmd, right_cmd);
+
   if (((left_pos_[1] < 0. && left_leg_state == LegState::BEHIND) ||
        (left_pos_[1] > 0. && left_leg_state == LegState::UNDER)) &&
       ((right_pos_[1] < 0. && right_leg_state == LegState::BEHIND) ||
@@ -358,22 +352,20 @@ void BipedalController::sitDown(const ros::Time& time, const ros::Duration& peri
     ROS_INFO("[balance] Enter SIT_DOWN");
     balance_state_changed_ = true;
   }
-  left_wheel_joint_handle_.setCommand(
-      pid_left_wheel_vel_.computeCommand(-left_wheel_joint_handle_.getVelocity(), period));
-  right_wheel_joint_handle_.setCommand(
-      pid_right_wheel_vel_.computeCommand(-right_wheel_joint_handle_.getVelocity(), period));
-  left_first_leg_joint_handle_.setCommand(0.);
-  left_second_leg_joint_handle_.setCommand(0.);
-  right_first_leg_joint_handle_.setCommand(0.);
-  right_second_leg_joint_handle_.setCommand(0.);
-  if (abs(x_left_(1)) < 0.1 && abs(x_left_(5)) < 0.1 && abs(x_left_(3)) < 0.1)
+
+  LegCommand left_cmd = { 0, 0, { 0., 0. } }, right_cmd = { 0, 0, { 0., 0. } };
+  double left_wheel_cmd = pid_left_wheel_vel_.computeCommand(-left_wheel_joint_handle_.getVelocity(), period);
+  double right_wheel_cmd = pid_right_wheel_vel_.computeCommand(-right_wheel_joint_handle_.getVelocity(), period);
+  setJointCommands(joint_handles_, left_cmd, right_cmd, left_wheel_cmd, right_wheel_cmd);
+
+  if (abs(x_left_(1)) < 0.1 && abs(x_left_(5)) < 0.1 && abs(x_left_(3)) < 0.15)
   {
     if (!overturn_)
       balance_mode_ = BalanceMode::STAND_UP;
     else
       balance_mode_ = BalanceMode::RECOVER;
     balance_state_changed_ = false;
-    ROS_INFO("[balance] Exit NORMAL");
+    ROS_INFO("[balance] Exit SIT_DOWN");
   }
 }
 
@@ -384,31 +376,17 @@ void BipedalController::recover(const ros::Time& time, const ros::Duration& peri
     ROS_INFO("[balance] Enter RECOVER");
     balance_state_changed_ = true;
   }
+
+  LegCommand left_cmd = { 0, 0, { 0., 0. } }, right_cmd = { 0, 0, { 0., 0. } };
   detectLegState(x_left_, left_leg_state);
   detectLegState(x_right_, right_leg_state);
-  Eigen::Matrix<double, 2, 1> F_leg;
-  double T_theta_l, T_theta_r;
-  double left_T[2]{ 0. }, right_T[2]{ 0. };
   if (left_leg_state != LegState::FRONT)
-  {
-    F_leg[0] = pid_left_leg_.computeCommand(0.4 - left_pos_[0], period);
-    T_theta_l =
-        pid_left_leg_theta_.computeCommand(-angles::shortest_angular_distance(-M_PI / 2 + 0.2, left_pos_[1]), period);
-    leg_conv(F_leg[0], -T_theta_l, left_angle[0], left_angle[1], left_T);
-  }
+    left_cmd = computePidLegCommand(0.4, -M_PI / 2 + 0.2, left_pos_[0], left_pos_[1], pid_left_leg_,
+                                    pid_left_leg_theta_, left_angle, period);
   if (right_leg_state != LegState::FRONT)
-  {
-    F_leg[1] = pid_right_leg_.computeCommand(0.4 - right_pos_[0], period);
-    T_theta_r =
-        pid_right_leg_theta_.computeCommand(-angles::shortest_angular_distance(-M_PI / 2 + 0.2, right_pos_[1]), period);
-    leg_conv(F_leg[1], -T_theta_r, right_angle[0], right_angle[1], right_T);
-  }
-  left_first_leg_joint_handle_.setCommand(left_T[0]);
-  right_first_leg_joint_handle_.setCommand(right_T[0]);
-  left_second_leg_joint_handle_.setCommand(left_T[1]);
-  right_second_leg_joint_handle_.setCommand(right_T[1]);
-  left_wheel_joint_handle_.setCommand(0.);
-  right_wheel_joint_handle_.setCommand(0.);
+    right_cmd = computePidLegCommand(0.4, -M_PI / 2 + 0.2, right_pos_[0], right_pos_[1], pid_right_leg_,
+                                     pid_right_leg_theta_, right_angle, period);
+  setJointCommands(joint_handles_, left_cmd, right_cmd);
 
   if (left_leg_state == LegState::FRONT && right_leg_state == LegState::FRONT)
   {

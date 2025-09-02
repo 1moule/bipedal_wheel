@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <array>
+#include <utility>
+
 namespace bipedal_wheel_controller
 {
 struct ModelParams
@@ -19,6 +22,13 @@ struct ModelParams
   double i_m;        // Body inertia
   double r;          // Wheel radius
   double g;          // Gravity acceleration
+};
+
+struct LegCommand
+{
+  double force;     // Thrust
+  double torque;    // Torque
+  double input[2];  // input
 };
 
 enum LegState

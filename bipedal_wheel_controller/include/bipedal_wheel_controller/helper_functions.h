@@ -5,16 +5,18 @@
 #pragma once
 
 #include <angles/angles.h>
-
-#include <Eigen/Dense>
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <Eigen/Dense>
+#include <control_toolbox/pid.h>
 #include <geometry_msgs/Quaternion.h>
+#include <hardware_interface/joint_command_interface.h>
 
 #include "bipedal_wheel_controller/dynamics/gen_A.h"
 #include "bipedal_wheel_controller/dynamics/gen_B.h"
 #include "bipedal_wheel_controller/vmc/leg_conv_fwd.h"
+#include "bipedal_wheel_controller/vmc/leg_conv.h"
 #include "bipedal_wheel_controller/definitions.h"
 
 namespace bipedal_wheel_controller
@@ -182,6 +184,52 @@ inline void setUpLegMotion(const Eigen::Matrix<double, STATE_DIM, 1>& x, const i
       }
       break;
   }
+}
+
+/**
+ * Compute the leg command using PID controllers
+ * @param desired_length
+ * @param desired_angle
+ * @param current_length
+ * @param current_angle
+ * @param length_pid
+ * @param angle_pid
+ * @param leg_angle
+ * @param period
+ * @return
+ */
+inline LegCommand computePidLegCommand(double desired_length, double desired_angle, double current_length,
+                                       double current_angle, control_toolbox::Pid& length_pid,
+                                       control_toolbox::Pid& angle_pid, const double* leg_angle,
+                                       const ros::Duration& period)
+{
+  LegCommand cmd;
+  cmd.force = length_pid.computeCommand(desired_length - current_length, period);
+  cmd.torque = -angle_pid.computeCommand(-angles::shortest_angular_distance(desired_angle, current_angle), period);
+  leg_conv(cmd.force, cmd.torque, leg_angle[0], leg_angle[1], cmd.input);
+  return cmd;
+}
+
+/**
+ * Set joint commands to the joint handles
+ * @param joints
+ * @param left_cmd
+ * @param right_cmd
+ * @param wheel_left
+ * @param wheel_right
+ */
+inline void setJointCommands(std::vector<hardware_interface::JointHandle*>& joints, const LegCommand& left_cmd,
+                             const LegCommand& right_cmd, double wheel_left = 0., double wheel_right = 0.)
+{
+  if (joints.size() != 6)
+    throw std::runtime_error("Joint handle vector size must be 6!");
+
+  joints[0]->setCommand(left_cmd.input[0]);
+  joints[1]->setCommand(left_cmd.input[1]);
+  joints[2]->setCommand(right_cmd.input[0]);
+  joints[3]->setCommand(right_cmd.input[1]);
+  joints[4]->setCommand(wheel_left);
+  joints[5]->setCommand(wheel_right);
 }
 
 /**
