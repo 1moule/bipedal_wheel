@@ -25,6 +25,13 @@ public:
   }
 
 private:
+  double calculateSupportForce(double F, double Tp, double leg_length, double acc_z,
+                               Eigen::Matrix<double, STATE_DIM, 1> x, Eigen::Matrix<double, CONTROL_DIM, 1> u,
+                               const std::shared_ptr<ModelParams>& model_params);
+  bool unstickDetection(const double& hip_effort, const double& knee_effort, const double& wheel_effort,
+                        const double& hip_angle, const double& knee_angle, const double& leg_length,
+                        const double& acc_z, const std::shared_ptr<ModelParams>& model_params,
+                        Eigen::Matrix<double, STATE_DIM, 1> x);
   std::vector<hardware_interface::JointHandle*> joint_handles_;
   std::vector<control_toolbox::Pid*> pid_legs_;
   control_toolbox::Pid pid_yaw_vel_, pid_theta_diff_, pid_roll_;

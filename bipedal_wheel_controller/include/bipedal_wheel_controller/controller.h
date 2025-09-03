@@ -43,13 +43,7 @@ public:
   bool getOverturn(){ return overturn_; }
   bool getStateChange(){ return balance_state_changed_; }
   bool getCompleteStand(){ return complete_stand_; }
-  Eigen::Matrix<double, STATE_DIM, 1> getLeftState() { return x_left_; }
-  Eigen::Matrix<double, STATE_DIM, 1> getRightState() { return x_right_; }
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> getCoeffs() { return coeffs_; }
-  double* getLeftPos(){ return left_pos_; }
-  double* getRightPos(){ return right_pos_; }
-  double* getLeftAngle(){ return left_angle; }
-  double* getRightAngle(){ return right_angle; }
   const std::shared_ptr<ModelParams>& getModelParams(){ return model_params_; }
   double getLegCmd(){ return legCmd_.data; }
   double getJumpCmd(){ return jumpCmd_.data; }
@@ -67,6 +61,8 @@ private:
   bool setupModelParams(ros::NodeHandle& controller_nh);
   bool setupPID(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
+  void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const std::vector<double>& L0s,
+               Eigen::Matrix<double, 4, 12>& coeffs);
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> coeffs_;
   Eigen::Matrix<double, STATE_DIM, STATE_DIM> q_{};
   Eigen::Matrix<double, CONTROL_DIM, CONTROL_DIM> r_{};
@@ -77,17 +73,11 @@ private:
 
   int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
-  bool overturn_ = false;
 
   std::unique_ptr<ModeBase> controller_mode_;
 
   // stand up
-  int left_leg_state, right_leg_state;
-  bool complete_stand_ = false;
-
-  // jump
-  int jump_phase_ = JumpPhase::SQUAT;
-  bool start_jump_ = false;
+  bool complete_stand_ = false, overturn_ = false;
 
   // handles
   hardware_interface::ImuSensorHandle imu_handle_;

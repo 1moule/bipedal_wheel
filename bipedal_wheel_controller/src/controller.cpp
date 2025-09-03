@@ -278,5 +278,19 @@ bool BipedalController::setupLQR(ros::NodeHandle& controller_nh)
   return true;
 }
 
+void BipedalController::polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const std::vector<double>& L0s,
+                                Eigen::Matrix<double, 4, 12>& coeffs)
+{
+  int N = L0s.size();
+  Eigen::MatrixXd A(N, 4), B(N, 12);
+  for (int i = 0; i < N; ++i)
+  {
+    A.block(i, 0, 1, 4) << pow(L0s[i], 3), pow(L0s[i], 2), L0s[i], 1.0;
+    Eigen::Map<const Eigen::Matrix<double, 12, 1>> flat(Ks[i].data());
+    B.row(i) = flat.transpose();
+  }
+  coeffs = (A.transpose() * A).ldlt().solve(A.transpose() * B);
+}
+
 }  // namespace bipedal_wheel_controller
 PLUGINLIB_EXPORT_CLASS(bipedal_wheel_controller::BipedalController, controller_interface::ControllerBase)

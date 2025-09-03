@@ -131,4 +131,38 @@ void Normal::execute(BipedalController* controller, const ros::Time& time, const
     ROS_INFO("[balance] Exit NORMAL");
   }
 }
+
+double Normal::calculateSupportForce(double F, double Tp, double leg_length, double acc_z,
+                                     Eigen::Matrix<double, STATE_DIM, 1> x, Eigen::Matrix<double, CONTROL_DIM, 1> u,
+                                     const std::shared_ptr<ModelParams>& model_params)
+{
+  Eigen::Matrix<double, STATE_DIM, STATE_DIM> a;
+  Eigen::Matrix<double, STATE_DIM, CONTROL_DIM> b;
+  generateAB(model_params, a, b, leg_length);
+
+  double P = F * cos(x(0)) + Tp * sin(x(0)) / leg_length;
+  double ddot_zM = acc_z - model_params->g;
+  auto ddot_x = a * x + b * u;
+  double ddot_theta = ddot_x(1);
+  double ddot_zw = ddot_zM - leg_length * cos(x(0)) + 2 * leg_length * x(1) * sin(x(0)) +
+                   +leg_length * (ddot_theta * sin(x(0)) + x(1) * x(1) * cos(x(0)));
+  double Fn = model_params->m_w * ddot_zw + model_params->m_w * model_params->g + P;
+  return Fn;
+}
+
+bool Normal::unstickDetection(const double& hip_effort, const double& knee_effort, const double& wheel_effort,
+                              const double& hip_angle, const double& knee_angle, const double& leg_length,
+                              const double& acc_z, const std::shared_ptr<ModelParams>& model_params,
+                              Eigen::Matrix<double, STATE_DIM, 1> x)
+{
+  double leg_F[2];
+  leg_conv_fwd(hip_effort, knee_effort, hip_angle, knee_angle, leg_F);
+  Eigen::Matrix<double, CONTROL_DIM, 1> u_left_real;
+  u_left_real << wheel_effort, leg_F[1];
+  double Fn = calculateSupportForce(leg_F[0], leg_F[1], leg_length, acc_z, x, u_left_real, model_params);
+  if (Fn < 20.)
+    return true;
+  else
+    return false;
+}
 }  // namespace bipedal_wheel_controller

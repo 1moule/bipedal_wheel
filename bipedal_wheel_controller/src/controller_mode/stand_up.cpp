@@ -47,4 +47,32 @@ void StandUp::execute(BipedalController* controller, const ros::Time& time, cons
     ROS_INFO("[balance] Exit STAND_UP");
   }
 }
+
+void StandUp::setUpLegMotion(const Eigen::Matrix<double, STATE_DIM, 1>& x, const int& other_leg_state,
+                             const double& leg_length, const double& leg_theta, int& leg_state, double& theta_des,
+                             double& length_des)
+{
+  switch (leg_state)
+  {
+    case LegState::UNDER:
+      theta_des = 0.15;
+      length_des = 0.05;
+      break;
+    case LegState::FRONT:
+      theta_des = M_PI / 2 + 0.2;
+      length_des = 0.4;
+      if (abs(angles::shortest_angular_distance(x[0], M_PI / 2)) < 0.2 && abs(x[4]) < 0.1)
+        leg_state = LegState::BEHIND;
+      break;
+    case LegState::BEHIND:
+      theta_des = leg_theta;
+      length_des = leg_length;
+      if (other_leg_state != LegState::FRONT)
+      {
+        theta_des = 0.;
+        length_des = 0.05;
+      }
+      break;
+  }
+}
 }  // namespace bipedal_wheel_controller

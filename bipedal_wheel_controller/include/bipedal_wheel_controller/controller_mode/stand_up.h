@@ -24,6 +24,9 @@ public:
   }
 
 private:
+  void setUpLegMotion(const Eigen::Matrix<double, STATE_DIM, 1>& x, const int& other_leg_state,
+                      const double& leg_length, const double& leg_theta, int& leg_state, double& theta_des,
+                      double& length_des);
   std::vector<hardware_interface::JointHandle*> joint_handles_;
   std::vector<control_toolbox::Pid*> pid_legs_, pid_thetas_;
   int left_leg_state, right_leg_state;
