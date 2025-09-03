@@ -21,13 +21,13 @@ void SitDown::execute(BipedalController* controller, const ros::Time& time, cons
     controller->setStateChange(true);
   }
 
-  auto x = controller->getLeftState();
   LegCommand left_cmd = { 0, 0, { 0., 0. } }, right_cmd = { 0, 0, { 0., 0. } };
   double left_wheel_cmd = pid_wheels_[0]->computeCommand(joint_handles_[0]->getVelocity(), period);
   double right_wheel_cmd = pid_wheels_[1]->computeCommand(joint_handles_[1]->getVelocity(), period);
   setJointCommands(joint_handles_, left_cmd, right_cmd, left_wheel_cmd, right_wheel_cmd);
 
-  if (abs(x(1)) < 0.1 && abs(x(5)) < 0.1 && abs(x(3)) < 0.15)
+  // Exit
+  if (abs(x_left_(1)) < 0.1 && abs(x_left_(5)) < 0.1 && abs(x_left_(3)) < 0.15)
   {
     if (!controller->getOverturn())
       controller->setMode(BalanceMode::STAND_UP);

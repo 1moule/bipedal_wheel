@@ -79,6 +79,8 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
   }
   ramp_vel_cmd_.x = ramp_x_->output();
   ramp_vel_cmd_.z = ramp_w_->output();
+
+  updateEstimation(time, period);
   moveJoint(time, period);
 }
 
@@ -155,7 +157,6 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
 
 void BipedalController::moveJoint(const ros::Time& time, const ros::Duration& period)
 {
-  updateEstimation(time, period);
   if (!balance_state_changed_)
   {
     if (balance_mode_ == BalanceMode::SIT_DOWN)
