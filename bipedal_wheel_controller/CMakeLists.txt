@@ -61,14 +61,9 @@ include_directories(
 )
 
 ## Declare cpp executables
+file(GLOB_RECURSE sources "src/*.cpp" "src/vmc/*.c" "src/dynamics/*.c" "src/controller_mode/*.cpp")
 add_library(${PROJECT_NAME}
-        src/vmc/leg_conv_fwd.c
-        src/vmc/leg_conv.c
-        src/vmc/leg_pos.c
-        src/vmc/leg_spd.c
-        src/dynamics/gen_A.c
-        src/dynamics/gen_B.c
-        src/controller.cpp
+        ${sources}
 )
 
 ## Specify libraries to link executable targets against
