@@ -28,7 +28,7 @@ namespace bipedal_wheel_controller
  * @param b
  * @param leg_length
  */
-inline void generateAB(const std::unique_ptr<ModelParams>& model_params, Eigen::Matrix<double, STATE_DIM, STATE_DIM>& a,
+inline void generateAB(const std::shared_ptr<ModelParams>& model_params, Eigen::Matrix<double, STATE_DIM, STATE_DIM>& a,
                        Eigen::Matrix<double, STATE_DIM, CONTROL_DIM>& b, double leg_length)
 {
   double A[36] = { 0. }, B[12]{ 0. };
@@ -88,7 +88,7 @@ inline void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const st
  */
 inline double calculateSupportForce(double F, double Tp, double leg_length, double acc_z,
                                     Eigen::Matrix<double, STATE_DIM, 1> x, Eigen::Matrix<double, CONTROL_DIM, 1> u,
-                                    const std::unique_ptr<ModelParams>& model_params)
+                                    const std::shared_ptr<ModelParams>& model_params)
 {
   Eigen::Matrix<double, STATE_DIM, STATE_DIM> a;
   Eigen::Matrix<double, STATE_DIM, CONTROL_DIM> b;
@@ -119,7 +119,7 @@ inline double calculateSupportForce(double F, double Tp, double leg_length, doub
  */
 inline bool unstickDetection(const double& hip_effort, const double& knee_effort, const double& wheel_effort,
                              const double& hip_angle, const double& knee_angle, const double& leg_length,
-                             const double& acc_z, const std::unique_ptr<ModelParams>& model_params,
+                             const double& acc_z, const std::shared_ptr<ModelParams>& model_params,
                              Eigen::Matrix<double, STATE_DIM, 1> x)
 {
   double leg_F[2];

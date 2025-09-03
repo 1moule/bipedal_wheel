@@ -19,6 +19,11 @@
 
 #include "bipedal_wheel_controller/helper_functions.h"
 #include "bipedal_wheel_controller/definitions.h"
+#include "bipedal_wheel_controller/controller_mode/mode_base.h"
+#include "bipedal_wheel_controller/controller_mode/sit_down.h"
+#include "bipedal_wheel_controller/controller_mode/stand_up.h"
+#include "bipedal_wheel_controller/controller_mode/recover.h"
+#include "bipedal_wheel_controller/controller_mode/normal.h"
 
 namespace bipedal_wheel_controller
 {
@@ -28,27 +33,37 @@ class BipedalController
   : public controller_interface::MultiInterfaceController<hardware_interface::ImuSensorInterface,
                                                           hardware_interface::EffortJointInterface>
 {
-  enum BalanceMode
-  {
-    NORMAL,
-    STAND_UP,
-    SIT_DOWN,
-    RECOVER
-  };
-
 public:
   BipedalController() = default;
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& root_nh, ros::NodeHandle& controller_nh) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void stopping(const ros::Time& time) override;
 
+  // clang-format off
+  bool getOverturn(){ return overturn_; }
+  bool getStateChange(){ return balance_state_changed_; }
+  bool getCompleteStand(){ return complete_stand_; }
+  Eigen::Matrix<double, STATE_DIM, 1> getLeftState() { return x_left_; }
+  Eigen::Matrix<double, STATE_DIM, 1> getRightState() { return x_right_; }
+  Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> getCoeffs() { return coeffs_; }
+  double* getLeftPos(){ return left_pos_; }
+  double* getRightPos(){ return right_pos_; }
+  double* getLeftAngle(){ return left_angle; }
+  double* getRightAngle(){ return right_angle; }
+  const std::shared_ptr<ModelParams>& getModelParams(){ return model_params_; }
+  double getLegCmd(){ return legCmd_.data; }
+  double getJumpCmd(){ return jumpCmd_.data; }
+  geometry_msgs::Vector3 getVelCmd(){ return ramp_vel_cmd_; }
+
+  void setStateChange(bool state){ balance_state_changed_ = state; }
+  void setCompleteStand(bool state){ complete_stand_ = state; }
+  void setJumpCmd(bool cmd){ jumpCmd_.data = cmd; }
+  void setMode(int mode){ balance_mode_ = mode; }
+  // clang-format on
+
 private:
   void updateEstimation(const ros::Time& time, const ros::Duration& period);
   void moveJoint(const ros::Time& time, const ros::Duration& period);
-  void normal(const ros::Time& time, const ros::Duration& period);
-  void standUp(const ros::Time& time, const ros::Duration& period);
-  void sitDown(const ros::Time& time, const ros::Duration& period);
-  void recover(const ros::Time& time, const ros::Duration& period);
   bool setupModelParams(ros::NodeHandle& controller_nh);
   bool setupPID(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
@@ -58,11 +73,13 @@ private:
   Eigen::Matrix<double, STATE_DIM, 1> x_left_, x_right_;
   double vmc_bias_angle_, left_angle[2], right_angle[2], left_pos_[2], left_spd_[2], right_pos_[2], right_spd_[2];
 
-  std::unique_ptr<ModelParams> model_params_;
+  std::shared_ptr<ModelParams> model_params_;
 
   int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
   bool overturn_ = false;
+
+  std::unique_ptr<ModeBase> controller_mode_;
 
   // stand up
   int left_leg_state, right_leg_state;
@@ -82,6 +99,7 @@ private:
   control_toolbox::Pid pid_yaw_vel_, pid_left_leg_, pid_right_leg_, pid_theta_diff_, pid_roll_;
   control_toolbox::Pid pid_left_leg_theta_, pid_right_leg_theta_;
   control_toolbox::Pid pid_left_wheel_vel_, pid_right_wheel_vel_;
+  std::vector<control_toolbox::Pid*> pid_wheels_, pid_legs_, pid_thetas_;
 
   // transform
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;

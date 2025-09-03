@@ -46,6 +46,14 @@ enum JumpPhase
   DONE
 };
 
+enum BalanceMode
+{
+  NORMAL,
+  STAND_UP,
+  SIT_DOWN,
+  RECOVER
+};
+
 constexpr std::array<std::pair<JumpPhase, const double>, 3> jumpLengthDes = {
   { { JumpPhase::SQUAT, 0.15 }, { JumpPhase::JUMP, 0.4 }, { JumpPhase::SHRINK, 0.15 } }
 };

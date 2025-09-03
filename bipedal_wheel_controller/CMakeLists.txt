@@ -70,6 +70,8 @@ add_library(${PROJECT_NAME}
         src/dynamics/gen_B.c
         src/controller_mode/stand_up.cpp
         src/controller_mode/sit_down.cpp
+        src/controller_mode/recover.cpp
+        src/controller_mode/normal.cpp
         src/controller.cpp
 )
 
