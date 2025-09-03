@@ -66,8 +66,6 @@ private:
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> coeffs_;
   Eigen::Matrix<double, STATE_DIM, STATE_DIM> q_{};
   Eigen::Matrix<double, CONTROL_DIM, CONTROL_DIM> r_{};
-  Eigen::Matrix<double, STATE_DIM, 1> x_left_, x_right_;
-  double vmc_bias_angle_, left_angle[2], right_angle[2], left_pos_[2], left_spd_[2], right_pos_[2], right_spd_[2];
 
   std::shared_ptr<ModelParams> model_params_;
 
@@ -103,8 +101,5 @@ private:
   ros::Time cmd_update_time_;
 
   std::unique_ptr<RampFilter> ramp_x_, ramp_w_;
-  geometry_msgs::Vector3 angular_vel_base_{}, linear_acc_base_{};
-  double roll_{}, pitch_{}, yaw_{};
-  double leg_length_{};
 };
 }  // namespace bipedal_wheel_controller

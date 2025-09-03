@@ -21,7 +21,8 @@ public:
   virtual void execute(BipedalController* controller, const ros::Time& time, const ros::Duration& period) = 0;
   virtual const char* name() const = 0;
   virtual ~ModeBase() = default;
-  void updateEstimation(Eigen::Matrix<double, STATE_DIM, 1> x_left, Eigen::Matrix<double, STATE_DIM, 1> x_right)
+  void updateEstimation(const Eigen::Matrix<double, STATE_DIM, 1>& x_left,
+                        const Eigen::Matrix<double, STATE_DIM, 1>& x_right)
   {
     x_left_ = x_left;
     x_right_ = x_right;
@@ -36,8 +37,8 @@ public:
     std::memcpy(left_angle_, left_angle, 2 * sizeof(double));
     std::memcpy(right_angle_, right_angle, 2 * sizeof(double));
   }
-  void updateBaseState(geometry_msgs::Vector3 angular_vel_base, geometry_msgs::Vector3 linear_acc_base, double roll,
-                       double pitch, double yaw)
+  void updateBaseState(const geometry_msgs::Vector3& angular_vel_base, const geometry_msgs::Vector3& linear_acc_base,
+                       const double& roll, const double& pitch, const double& yaw)
   {
     angular_vel_base_ = angular_vel_base;
     linear_acc_base_ = linear_acc_base;
@@ -47,7 +48,7 @@ public:
   }
 
 protected:
-  Eigen::Matrix<double, STATE_DIM, 1> x_left_, x_right_;
+  Eigen::Matrix<double, STATE_DIM, 1> x_left_{}, x_right_{};
   double left_angle_[2], right_angle_[2], left_pos_[2], left_spd_[2], right_pos_[2], right_spd_[2];
   geometry_msgs::Vector3 angular_vel_base_{}, linear_acc_base_{};
   double roll_, pitch_, yaw_;

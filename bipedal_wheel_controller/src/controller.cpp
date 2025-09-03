@@ -95,9 +95,11 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   acc.y = imu_handle_.getLinearAcceleration()[1];
   acc.z = imu_handle_.getLinearAcceleration()[2];
   tf2::Transform odom2imu, imu2base, odom2base;
+  geometry_msgs::Vector3 angular_vel_base{}, linear_acc_base{};
+  double roll{}, pitch{}, yaw{};
   try
   {
-    tf2::doTransform(gyro, angular_vel_base_, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
+    tf2::doTransform(gyro, angular_vel_base, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
     geometry_msgs::TransformStamped tf_msg;
     tf_msg = tf_buffer_->lookupTransform(imu_handle_.getFrameId(), "base_link", time);
     tf2::fromMsg(tf_msg.transform, imu2base);
@@ -109,11 +111,11 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
     odom2imu.setOrigin(odom2imu_origin);
     odom2imu.setRotation(odom2imu_quaternion);
     odom2base = odom2imu * imu2base;
-    quatToRPY(toMsg(odom2base).rotation, roll_, pitch_, yaw_);
+    quatToRPY(toMsg(odom2base).rotation, roll, pitch, yaw);
 
     tf_msg.transform = tf2::toMsg(odom2imu.inverse());
     tf_msg.header.stamp = time;
-    tf2::doTransform(acc, linear_acc_base_, tf_msg);
+    tf2::doTransform(acc, linear_acc_base, tf_msg);
 
     tf2::Vector3 z_body(0, 0, 1);
     tf2::Vector3 z_world = tf2::quatRotate(odom2base.getRotation(), z_body);
@@ -127,37 +129,39 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   }
 
   // vmc
+  double left_angle[2]{}, right_angle[2]{}, left_pos[2]{}, left_spd[2]{}, right_pos[2]{}, right_spd[2]{};
   // [0]:hip_vmc_joint [1]:knee_vmc_joint
   left_angle[0] = left_first_leg_joint_handle_.getPosition() + M_PI / 2.;
   left_angle[1] = left_second_leg_joint_handle_.getPosition() - M_PI / 4.;
   right_angle[0] = right_first_leg_joint_handle_.getPosition() + M_PI / 2.;
   right_angle[1] = right_second_leg_joint_handle_.getPosition() - M_PI / 4.;
   // [0] is length, [1] is angle
-  leg_pos(left_angle[0], left_angle[1], left_pos_);
-  leg_pos(right_angle[0], right_angle[1], right_pos_);
+  leg_pos(left_angle[0], left_angle[1], left_pos);
+  leg_pos(right_angle[0], right_angle[1], right_pos);
   leg_spd(left_first_leg_joint_handle_.getVelocity(), left_second_leg_joint_handle_.getVelocity(), left_angle[0],
-          left_angle[1], left_spd_);
+          left_angle[1], left_spd);
   leg_spd(right_first_leg_joint_handle_.getVelocity(), right_second_leg_joint_handle_.getVelocity(), right_angle[0],
-          right_angle[1], right_spd_);
+          right_angle[1], right_spd);
 
   // update state
-  x_left_[3] =
+  Eigen::Matrix<double, STATE_DIM, 1> x_left{}, x_right{};
+  x_left[3] =
       (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-  if (abs(x_left_[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
-    x_left_[2] += x_left_[3] * period.toSec();
+  if (abs(x_left[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
+    x_left[2] += x_left[3] * period.toSec();
   else
-    x_left_[2] = 0.;
-  x_left_[0] = left_pos_[1] + pitch_;
-  x_left_[1] = -left_spd_[1] + angular_vel_base_.y;
-  x_left_[4] = -pitch_;
-  x_left_[5] = -angular_vel_base_.y;
-  x_right_ = x_left_;
-  x_right_[0] = right_pos_[1] + pitch_;
-  x_right_[1] = -right_spd_[1] + angular_vel_base_.y;
+    x_left[2] = 0.;
+  x_left[0] = left_pos[1] + pitch;
+  x_left[1] = -left_spd[1] + angular_vel_base.y;
+  x_left[4] = -pitch;
+  x_left[5] = -angular_vel_base.y;
+  x_right = x_left;
+  x_right[0] = right_pos[1] + pitch;
+  x_right[1] = -right_spd[1] + angular_vel_base.y;
 
-  mode_impl->updateEstimation(x_left_, x_right_);
-  mode_impl->updateLegKinematics(left_angle, right_angle, left_pos_, left_spd_, right_pos_, right_spd_);
-  mode_impl->updateBaseState(angular_vel_base_, linear_acc_base_, roll_, pitch_, yaw_);
+  mode_impl->updateEstimation(x_left, x_right);
+  mode_impl->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
+  mode_impl->updateBaseState(angular_vel_base, linear_acc_base, roll, pitch, yaw);
 }
 
 void BipedalController::updateControllerMode()
@@ -197,9 +201,7 @@ bool BipedalController::setupModelParams(ros::NodeHandle& controller_nh)
         { "L_weight", &model_params_->L_weight },
         { "Lm_weight", &model_params_->Lm_weight },
         { "g", &model_params_->g },
-        { "wheel_radius", &model_params_->r },
-        { "leg_length", &leg_length_ },
-        { "vmc_bias_angle", &vmc_bias_angle_ } };
+        { "wheel_radius", &model_params_->r } };
 
   for (const auto& e : tbl)
     if (!controller_nh.getParam(e.first, *e.second))
