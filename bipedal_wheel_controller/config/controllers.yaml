@@ -32,15 +32,7 @@ controllers:
     i_m: 0.1748
     g: 9.81
     wheel_radius: 0.09
-    vmc_bias_angle: 3.665
-    left:
-      wheel_joint: "left_wheel_joint"
-      first_leg_joint: "left_hip_joint"
-      second_leg_joint: "left_knee_joint"
-    right:
-      wheel_joint: "right_wheel_joint"
-      first_leg_joint: "right_hip_joint"
-      second_leg_joint: "right_knee_joint"
+
     # theta d_theta x dx phi d_phi
     q: [ 300., 8., 5., 100., 1050., 5. ]
     # T Tp
