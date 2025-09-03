@@ -78,8 +78,8 @@ private:
 
   // handles
   hardware_interface::ImuSensorHandle imu_handle_;
-  hardware_interface::JointHandle left_wheel_joint_handle_, right_wheel_joint_handle_, left_first_leg_joint_handle_,
-      left_second_leg_joint_handle_, right_first_leg_joint_handle_, right_second_leg_joint_handle_;
+  hardware_interface::JointHandle left_wheel_joint_handle_, right_wheel_joint_handle_, left_hip_joint_handle_,
+      left_knee_joint_handle_, right_hip_joint_handle_, right_knee_joint_handle_;
   std::vector<hardware_interface::JointHandle*> joint_handles_;
 
   // pid

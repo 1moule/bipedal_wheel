@@ -21,26 +21,16 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
                              ros::NodeHandle& controller_nh)
 {
   imu_handle_ = robot_hw->get<hardware_interface::ImuSensorInterface>()->getHandle("base_imu");
-  std::string left_wheel_joint, right_wheel_joint, left_first_leg_joint, left_second_leg_joint, right_first_leg_joint,
-      right_second_leg_joint;
-  const std::tuple<const char*, std::string*, hardware_interface::JointHandle*> table[] = {
-    { "left/first_leg_joint", &left_first_leg_joint, &left_first_leg_joint_handle_ },
-    { "left/second_leg_joint", &left_second_leg_joint, &left_second_leg_joint_handle_ },
-    { "right/first_leg_joint", &right_first_leg_joint, &right_first_leg_joint_handle_ },
-    { "right/second_leg_joint", &right_second_leg_joint, &right_second_leg_joint_handle_ },
-    { "left/wheel_joint", &left_wheel_joint, &left_wheel_joint_handle_ },
-    { "right/wheel_joint", &right_wheel_joint, &right_wheel_joint_handle_ }
+  const std::pair<const char*, hardware_interface::JointHandle*> table[] = {
+    { "left_hip_joint", &left_hip_joint_handle_ },     { "left_knee_joint", &left_knee_joint_handle_ },
+    { "right_hip_joint", &right_hip_joint_handle_ },   { "right_knee_joint", &right_knee_joint_handle_ },
+    { "left_wheel_joint", &left_wheel_joint_handle_ }, { "right_wheel_joint", &right_wheel_joint_handle_ }
   };
   auto* joint_interface = robot_hw->get<hardware_interface::EffortJointInterface>();
   for (const auto& t : table)
   {
-    if (!controller_nh.getParam(std::get<0>(t), *std::get<1>(t)))
-    {
-      ROS_ERROR("Joint '%s' not found (ns: %s)", std::get<0>(t), controller_nh.getNamespace().c_str());
-      return false;
-    }
-    *std::get<2>(t) = joint_interface->getHandle(*std::get<1>(t));
-    joint_handles_.push_back(std::get<2>(t));
+    *t.second = joint_interface->getHandle(t.first);
+    joint_handles_.push_back(t.second);
   }
 
   ramp_x_ = std::make_unique<RampFilter>(4., 0.001);
@@ -131,17 +121,17 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   // vmc
   double left_angle[2]{}, right_angle[2]{}, left_pos[2]{}, left_spd[2]{}, right_pos[2]{}, right_spd[2]{};
   // [0]:hip_vmc_joint [1]:knee_vmc_joint
-  left_angle[0] = left_first_leg_joint_handle_.getPosition() + M_PI / 2.;
-  left_angle[1] = left_second_leg_joint_handle_.getPosition() - M_PI / 4.;
-  right_angle[0] = right_first_leg_joint_handle_.getPosition() + M_PI / 2.;
-  right_angle[1] = right_second_leg_joint_handle_.getPosition() - M_PI / 4.;
+  left_angle[0] = left_hip_joint_handle_.getPosition() + M_PI / 2.;
+  left_angle[1] = left_knee_joint_handle_.getPosition() - M_PI / 4.;
+  right_angle[0] = right_hip_joint_handle_.getPosition() + M_PI / 2.;
+  right_angle[1] = right_knee_joint_handle_.getPosition() - M_PI / 4.;
   // [0] is length, [1] is angle
   leg_pos(left_angle[0], left_angle[1], left_pos);
   leg_pos(right_angle[0], right_angle[1], right_pos);
-  leg_spd(left_first_leg_joint_handle_.getVelocity(), left_second_leg_joint_handle_.getVelocity(), left_angle[0],
-          left_angle[1], left_spd);
-  leg_spd(right_first_leg_joint_handle_.getVelocity(), right_second_leg_joint_handle_.getVelocity(), right_angle[0],
-          right_angle[1], right_spd);
+  leg_spd(left_hip_joint_handle_.getVelocity(), left_knee_joint_handle_.getVelocity(), left_angle[0], left_angle[1],
+          left_spd);
+  leg_spd(right_hip_joint_handle_.getVelocity(), right_knee_joint_handle_.getVelocity(), right_angle[0], right_angle[1],
+          right_spd);
 
   // update state
   Eigen::Matrix<double, STATE_DIM, 1> x_left{}, x_right{};
