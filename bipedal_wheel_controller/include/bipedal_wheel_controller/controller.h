@@ -57,7 +57,7 @@ public:
 
 private:
   void updateEstimation(const ros::Time& time, const ros::Duration& period);
-  void moveJoint(const ros::Time& time, const ros::Duration& period);
+  void updateControllerMode();
   bool setupModelParams(ros::NodeHandle& controller_nh);
   bool setupPID(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
@@ -73,8 +73,7 @@ private:
 
   int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
-
-  std::unique_ptr<ModeBase> controller_mode_;
+  std::unique_ptr<ModeBase> mode_impl;
 
   // stand up
   bool complete_stand_ = false, overturn_ = false;

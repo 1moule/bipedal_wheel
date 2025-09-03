@@ -80,8 +80,9 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
   ramp_vel_cmd_.x = ramp_x_->output();
   ramp_vel_cmd_.z = ramp_w_->output();
 
+  updateControllerMode();
   updateEstimation(time, period);
-  moveJoint(time, period);
+  mode_impl->execute(this, time, period);
 }
 
 void BipedalController::updateEstimation(const ros::Time& time, const ros::Duration& period)
@@ -153,25 +154,25 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   x_right_ = x_left_;
   x_right_[0] = right_pos_[1] + pitch_;
   x_right_[1] = -right_spd_[1] + angular_vel_base_.y;
+
+  mode_impl->updateEstimation(x_left_, x_right_);
+  mode_impl->updateLegKinematics(left_angle, right_angle, left_pos_, left_spd_, right_pos_, right_spd_);
+  mode_impl->updateBaseState(angular_vel_base_, linear_acc_base_, roll_, pitch_, yaw_);
 }
 
-void BipedalController::moveJoint(const ros::Time& time, const ros::Duration& period)
+void BipedalController::updateControllerMode()
 {
   if (!balance_state_changed_)
   {
     if (balance_mode_ == BalanceMode::SIT_DOWN)
-      controller_mode_ = std::make_unique<SitDown>(joint_handles_, pid_wheels_);
+      mode_impl = std::make_unique<SitDown>(joint_handles_, pid_wheels_);
     else if (balance_mode_ == BalanceMode::STAND_UP)
-      controller_mode_ = std::make_unique<StandUp>(joint_handles_, pid_legs_, pid_thetas_);
+      mode_impl = std::make_unique<StandUp>(joint_handles_, pid_legs_, pid_thetas_);
     else if (balance_mode_ == BalanceMode::RECOVER)
-      controller_mode_ = std::make_unique<Recover>(joint_handles_, pid_legs_, pid_thetas_);
+      mode_impl = std::make_unique<Recover>(joint_handles_, pid_legs_, pid_thetas_);
     else if (balance_mode_ == BalanceMode::NORMAL)
-      controller_mode_ = std::make_unique<Normal>(joint_handles_, pid_legs_, pid_yaw_vel_, pid_theta_diff_, pid_roll_);
+      mode_impl = std::make_unique<Normal>(joint_handles_, pid_legs_, pid_yaw_vel_, pid_theta_diff_, pid_roll_);
   }
-  controller_mode_->updateEstimation(x_left_, x_right_);
-  controller_mode_->updateLegKinematics(left_angle, right_angle, left_pos_, left_spd_, right_pos_, right_spd_);
-  controller_mode_->updateBaseState(angular_vel_base_, linear_acc_base_, roll_, pitch_, yaw_);
-  controller_mode_->execute(this, time, period);
 }
 
 void BipedalController::stopping(const ros::Time& time)
