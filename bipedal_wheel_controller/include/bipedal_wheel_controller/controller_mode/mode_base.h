@@ -22,30 +22,11 @@ public:
   virtual const char* name() const = 0;
   virtual ~ModeBase() = default;
   void updateEstimation(const Eigen::Matrix<double, STATE_DIM, 1>& x_left,
-                        const Eigen::Matrix<double, STATE_DIM, 1>& x_right)
-  {
-    x_left_ = x_left;
-    x_right_ = x_right;
-  }
+                        const Eigen::Matrix<double, STATE_DIM, 1>& x_right);
   void updateLegKinematics(double* left_angle, double* right_angle, double* left_pos, double* left_spd,
-                           double* right_pos, double* right_spd)
-  {
-    std::memcpy(left_pos_, left_pos, 2 * sizeof(double));
-    std::memcpy(left_spd_, left_spd, 2 * sizeof(double));
-    std::memcpy(right_pos_, right_pos, 2 * sizeof(double));
-    std::memcpy(right_spd_, right_spd, 2 * sizeof(double));
-    std::memcpy(left_angle_, left_angle, 2 * sizeof(double));
-    std::memcpy(right_angle_, right_angle, 2 * sizeof(double));
-  }
+                           double* right_pos, double* right_spd);
   void updateBaseState(const geometry_msgs::Vector3& angular_vel_base, const geometry_msgs::Vector3& linear_acc_base,
-                       const double& roll, const double& pitch, const double& yaw)
-  {
-    angular_vel_base_ = angular_vel_base;
-    linear_acc_base_ = linear_acc_base;
-    roll_ = roll;
-    pitch_ = pitch;
-    yaw_ = yaw;
-  }
+                       const double& roll, const double& pitch, const double& yaw);
 
 protected:
   Eigen::Matrix<double, STATE_DIM, 1> x_left_{}, x_right_{};

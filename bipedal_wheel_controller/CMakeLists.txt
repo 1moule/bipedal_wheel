@@ -74,6 +74,7 @@ add_library(${PROJECT_NAME}
         src/controller_mode/recover.cpp
         src/controller_mode/normal.cpp
         src/controller_mode/mode_manager.cpp
+        src/controller_mode/mode_base.cpp
 )
 
 ## Specify libraries to link executable targets against
