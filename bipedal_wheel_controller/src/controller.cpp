@@ -37,9 +37,10 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   ramp_w_ = std::make_unique<RampFilter>(10., 0.001);
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(ros::Duration(10));
   tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
+  mode_manager_ = std::make_unique<ModeManager>(controller_nh, joint_handles_);
   model_params_ = std::make_shared<ModelParams>();
 
-  if (!setupModelParams(controller_nh) || !setupPID(controller_nh) || !setupLQR(controller_nh))
+  if (!setupModelParams(controller_nh) || !setupLQR(controller_nh))
     return false;
 
   auto legCmdCallback = [this](const std_msgs::Float64::ConstPtr msg) { legCmd_ = *msg; };
@@ -70,9 +71,10 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
   ramp_vel_cmd_.x = ramp_x_->output();
   ramp_vel_cmd_.z = ramp_w_->output();
 
-  updateControllerMode();
+  if (!balance_state_changed_)
+    mode_manager_->switchMode(balance_mode_);
   updateEstimation(time, period);
-  mode_impl->execute(this, time, period);
+  mode_manager_->getModeImpl()->execute(this, time, period);
 }
 
 void BipedalController::updateEstimation(const ros::Time& time, const ros::Duration& period)
@@ -149,29 +151,14 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   x_right[0] = right_pos[1] + pitch;
   x_right[1] = -right_spd[1] + angular_vel_base.y;
 
-  mode_impl->updateEstimation(x_left, x_right);
-  mode_impl->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
-  mode_impl->updateBaseState(angular_vel_base, linear_acc_base, roll, pitch, yaw);
-}
-
-void BipedalController::updateControllerMode()
-{
-  if (!balance_state_changed_)
-  {
-    if (balance_mode_ == BalanceMode::SIT_DOWN)
-      mode_impl = std::make_unique<SitDown>(joint_handles_, pid_wheels_);
-    else if (balance_mode_ == BalanceMode::STAND_UP)
-      mode_impl = std::make_unique<StandUp>(joint_handles_, pid_legs_, pid_thetas_);
-    else if (balance_mode_ == BalanceMode::RECOVER)
-      mode_impl = std::make_unique<Recover>(joint_handles_, pid_legs_, pid_thetas_);
-    else if (balance_mode_ == BalanceMode::NORMAL)
-      mode_impl = std::make_unique<Normal>(joint_handles_, pid_legs_, pid_yaw_vel_, pid_theta_diff_, pid_roll_);
-  }
+  mode_manager_->getModeImpl()->updateEstimation(x_left, x_right);
+  mode_manager_->getModeImpl()->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
+  mode_manager_->getModeImpl()->updateBaseState(angular_vel_base, linear_acc_base, roll, pitch, yaw);
 }
 
 void BipedalController::stopping(const ros::Time& time)
 {
-  balance_mode_ = BalanceMode::RECOVER;
+  balance_mode_ = BalanceMode::STAND_UP;
   balance_state_changed_ = false;
   setJointCommands(joint_handles_, { 0, 0, { 0., 0. } }, { 0, 0, { 0., 0. } });
 
@@ -199,34 +186,6 @@ bool BipedalController::setupModelParams(ros::NodeHandle& controller_nh)
       ROS_ERROR("Param %s not given (namespace: %s)", e.first, controller_nh.getNamespace().c_str());
       return false;
     }
-  return true;
-}
-
-bool BipedalController::setupPID(ros::NodeHandle& controller_nh)
-{
-  const std::pair<const char*, control_toolbox::Pid*> pids[] = {
-    { "pid_yaw_vel", &pid_yaw_vel_ },
-    { "pid_left_leg", &pid_left_leg_ },
-    { "pid_right_leg", &pid_right_leg_ },
-    { "pid_theta_diff", &pid_theta_diff_ },
-    { "pid_roll", &pid_roll_ },
-    { "pid_left_leg_theta", &pid_left_leg_theta_ },
-    { "pid_right_leg_theta", &pid_right_leg_theta_ },
-    { "pid_left_wheel_vel", &pid_left_wheel_vel_ },
-    { "pid_right_wheel_vel", &pid_right_wheel_vel_ },
-  };
-
-  for (const auto& e : pids)
-    if (controller_nh.hasParam(e.first) && !e.second->init(ros::NodeHandle(controller_nh, e.first)))
-      return false;
-
-  pid_wheels_.push_back(&pid_left_wheel_vel_);
-  pid_wheels_.push_back(&pid_right_wheel_vel_);
-  pid_legs_.push_back(&pid_left_leg_);
-  pid_legs_.push_back(&pid_right_leg_);
-  pid_thetas_.push_back(&pid_left_leg_theta_);
-  pid_thetas_.push_back(&pid_right_leg_theta_);
-
   return true;
 }
 

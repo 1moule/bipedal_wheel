@@ -19,11 +19,7 @@
 
 #include "bipedal_wheel_controller/helper_functions.h"
 #include "bipedal_wheel_controller/definitions.h"
-#include "bipedal_wheel_controller/controller_mode/mode_base.h"
-#include "bipedal_wheel_controller/controller_mode/sit_down.h"
-#include "bipedal_wheel_controller/controller_mode/stand_up.h"
-#include "bipedal_wheel_controller/controller_mode/recover.h"
-#include "bipedal_wheel_controller/controller_mode/normal.h"
+#include "bipedal_wheel_controller/controller_mode/mode_manager.h"
 
 namespace bipedal_wheel_controller
 {
@@ -57,9 +53,7 @@ public:
 
 private:
   void updateEstimation(const ros::Time& time, const ros::Duration& period);
-  void updateControllerMode();
   bool setupModelParams(ros::NodeHandle& controller_nh);
-  bool setupPID(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
   void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const std::vector<double>& L0s,
                Eigen::Matrix<double, 4, 12>& coeffs);
@@ -71,7 +65,7 @@ private:
 
   int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
-  std::unique_ptr<ModeBase> mode_impl;
+  std::unique_ptr<ModeManager> mode_manager_;
 
   // stand up
   bool complete_stand_ = false, overturn_ = false;
@@ -81,12 +75,6 @@ private:
   hardware_interface::JointHandle left_wheel_joint_handle_, right_wheel_joint_handle_, left_hip_joint_handle_,
       left_knee_joint_handle_, right_hip_joint_handle_, right_knee_joint_handle_;
   std::vector<hardware_interface::JointHandle*> joint_handles_;
-
-  // pid
-  control_toolbox::Pid pid_yaw_vel_, pid_left_leg_, pid_right_leg_, pid_theta_diff_, pid_roll_;
-  control_toolbox::Pid pid_left_leg_theta_, pid_right_leg_theta_;
-  control_toolbox::Pid pid_left_wheel_vel_, pid_right_wheel_vel_;
-  std::vector<control_toolbox::Pid*> pid_wheels_, pid_legs_, pid_thetas_;
 
   // transform
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
