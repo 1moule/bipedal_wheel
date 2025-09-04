@@ -68,11 +68,11 @@ add_library(${PROJECT_NAME}
         src/vmc/leg_spd.c
         src/dynamics/gen_A.c
         src/dynamics/gen_B.c
+        src/controller.cpp
         src/controller_mode/stand_up.cpp
         src/controller_mode/sit_down.cpp
         src/controller_mode/recover.cpp
         src/controller_mode/normal.cpp
-        src/controller.cpp
         src/controller_mode/mode_manager.cpp
 )
 

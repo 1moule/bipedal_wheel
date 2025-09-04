@@ -158,7 +158,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
 
 void BipedalController::stopping(const ros::Time& time)
 {
-  balance_mode_ = BalanceMode::STAND_UP;
+  balance_mode_ = BalanceMode::RECOVER;
   balance_state_changed_ = false;
   setJointCommands(joint_handles_, { 0, 0, { 0., 0. } }, { 0, 0, { 0., 0. } });
 
