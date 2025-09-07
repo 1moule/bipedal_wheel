@@ -18,7 +18,7 @@
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0"/>
                 <geometry>
-                    <mesh filename="package://rm_description/meshes/common/imu.stl" scale="1 1 1"/>
+                    <mesh filename="package://bipedal_wheel_description/meshes/imu.stl" scale="1 1 1"/>
                 </geometry>
             </visual>
             <material name="orange">
