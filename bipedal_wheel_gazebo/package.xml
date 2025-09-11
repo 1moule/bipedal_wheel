@@ -39,6 +39,6 @@
 
     <export>
         <gazebo_ros_control plugin="${prefix}/bipedal_hw_sim_plugin.xml"/>
-        <gazebo_ros gazebo_model_path="${prefix}"/>
+        <gazebo_ros gazebo_model_path="${prefix}/.."/>
     </export>
 </package>
