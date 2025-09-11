@@ -39,6 +39,7 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
   mode_manager_ = std::make_unique<ModeManager>(controller_nh, joint_handles_);
   model_params_ = std::make_shared<ModelParams>();
+  tf_pub_.reset(new realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>(controller_nh, "/tf", 100));
 
   if (!setupModelParams(controller_nh) || !setupLQR(controller_nh))
     return false;
@@ -52,6 +53,10 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
     cmd_update_time_ = ros::Time::now();
   };
   vel_cmd_sub_ = controller_nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 1, velCmdCallback);
+
+  odom2base_.header.frame_id = "odom";
+  odom2base_.child_frame_id = "base_link";
+  odom2base_.transform.rotation.w = 1;
 
   return true;
 }
@@ -74,6 +79,7 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
   if (!balance_state_changed_)
     mode_manager_->switchMode(balance_mode_);
   updateEstimation(time, period);
+  updateOdom(time, period);
   mode_manager_->getModeImpl()->execute(this, time, period);
 }
 
@@ -104,6 +110,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
     odom2imu.setRotation(odom2imu_quaternion);
     odom2base = odom2imu * imu2base;
     quatToRPY(toMsg(odom2base).rotation, roll, pitch, yaw);
+    odom2base_.transform.rotation = toMsg(odom2base).rotation;
 
     tf_msg.transform = tf2::toMsg(odom2imu.inverse());
     tf_msg.header.stamp = time;
@@ -154,6 +161,28 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   mode_manager_->getModeImpl()->updateEstimation(x_left, x_right);
   mode_manager_->getModeImpl()->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
   mode_manager_->getModeImpl()->updateBaseState(angular_vel_base, linear_acc_base, roll, pitch, yaw);
+}
+
+void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& period)
+{
+  geometry_msgs::Vector3 linear_vel_base, linear_vel_odom;
+  linear_vel_base.x =
+      (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
+  linear_vel_base.y = 0.;
+  linear_vel_base.z = 0.;
+  tf2::doTransform(linear_vel_base, linear_vel_odom, odom2base_);
+  odom2base_.header.stamp = time;
+  odom2base_.transform.translation.x += linear_vel_odom.x * period.toSec();
+  odom2base_.transform.translation.y += linear_vel_odom.y * period.toSec();
+  //  odom2base_.transform.translation.z += linear_vel_odom.z * period.toSec();
+  tf2_msgs::TFMessage message;
+  message.transforms.push_back(odom2base_);
+  tf_buffer_->setTransform(odom2base_, "bipedal_wheel_controller", true);
+  if (tf_pub_->trylock())
+  {
+    tf_pub_->msg_ = message;
+    tf_pub_->unlockAndPublish();
+  }
 }
 
 void BipedalController::stopping(const ros::Time& time)

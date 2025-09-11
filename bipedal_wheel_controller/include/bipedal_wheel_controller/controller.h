@@ -53,6 +53,7 @@ public:
 
 private:
   void updateEstimation(const ros::Time& time, const ros::Duration& period);
+  void updateOdom(const ros::Time& time, const ros::Duration& period);
   bool setupModelParams(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
   void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const std::vector<double>& L0s,
@@ -79,6 +80,8 @@ private:
   // transform
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>> tf_pub_{};
+  geometry_msgs::TransformStamped odom2base_{};
 
   // ROS Interface
   ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;
