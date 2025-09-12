@@ -1,0 +1,27 @@
+<launch>
+    <!-- Arguments -->
+    <arg name="set_base_frame" default="base_link"/>
+    <arg name="set_odom_frame" default="odom"/>
+    <arg name="set_map_frame" default="map"/>
+    <arg name="open_rviz" default="true"/>
+
+    <!-- Robot Model -->
+    <param name="robot_description"
+           command="$(find xacro)/xacro $(find bipedal_wheel_description)/urdf/bipedal.urdf.xacro use_simulation:=true
+           add_wheel:=true"/>
+
+    <!-- SLAM: Gmapping -->
+    <node pkg="gmapping" type="slam_gmapping" name="bipedal_slam_gmapping" output="screen">
+        <param name="base_frame" value="$(arg set_base_frame)"/>
+        <param name="odom_frame" value="$(arg set_odom_frame)"/>
+        <param name="map_frame" value="$(arg set_map_frame)"/>
+        <rosparam command="load" file="$(find bipedal_wheel_slam)/gmapping/config/gmapping_params.yaml"/>
+    </node>
+
+    <!-- rviz -->
+    <group if="$(arg open_rviz)">
+        <node pkg="rviz" type="rviz" name="rviz" required="true"
+              args="-d $(find bipedal_wheel_slam)/gmapping/rviz/gmapping.rviz"/>
+    </group>
+
+</launch>
