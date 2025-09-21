@@ -209,7 +209,6 @@ void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& p
     loop_count_ = 0;
   }
   loop_count_++;
-  ROS_INFO_STREAM(loop_count_);
 }
 
 void BipedalController::stopping(const ros::Time& time)
