@@ -16,7 +16,7 @@
 #include <std_msgs/Bool.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
-
+#include <nav_msgs/Odometry.h>
 #include "bipedal_wheel_controller/helper_functions.h"
 #include "bipedal_wheel_controller/definitions.h"
 #include "bipedal_wheel_controller/controller_mode/mode_manager.h"
@@ -84,6 +84,7 @@ private:
   geometry_msgs::TransformStamped odom2base_{};
 
   // ROS Interface
+  std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::Odometry>> odom_pub_;
   ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;
   std_msgs::Float64 legCmd_{};
   std_msgs::Bool jumpCmd_{};
@@ -92,5 +93,7 @@ private:
   ros::Time cmd_update_time_;
 
   std::unique_ptr<RampFilter> ramp_x_, ramp_w_;
+  geometry_msgs::Vector3 angular_vel_base_{};
+  int loop_count_ = 0;
 };
 }  // namespace bipedal_wheel_controller

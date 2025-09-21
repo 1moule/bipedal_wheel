@@ -44,6 +44,7 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   if (!setupModelParams(controller_nh) || !setupLQR(controller_nh))
     return false;
 
+  // Setup subscribers
   auto legCmdCallback = [this](const std_msgs::Float64::ConstPtr msg) { legCmd_ = *msg; };
   leg_cmd_sub_ = controller_nh.subscribe<std_msgs::Float64>("/leg_command", 1, legCmdCallback);
   auto jumpCmdCallback = [this](const std_msgs::Bool::ConstPtr msg) { jumpCmd_ = *msg; };
@@ -53,6 +54,13 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
     cmd_update_time_ = ros::Time::now();
   };
   vel_cmd_sub_ = controller_nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 1, velCmdCallback);
+  // Setup odometry realtime publisher
+  odom_pub_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(root_nh, "odom", 100));
+  odom_pub_->msg_.header.frame_id = "odom";
+  odom_pub_->msg_.child_frame_id = "base_link";
+  odom_pub_->msg_.twist.covariance = { 0.01, 0., 0.,   0., 0.,   0., 0., 0.01, 0., 0.,   0., 0.,
+                                       0.,   0., 0.01, 0., 0.,   0., 0., 0.,   0., 0.01, 0., 0.,
+                                       0.,   0., 0.,   0., 0.01, 0., 0., 0.,   0., 0.,   0., 0.01 };
 
   odom2base_.header.frame_id = "odom";
   odom2base_.child_frame_id = "base_link";
@@ -93,11 +101,11 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   acc.y = imu_handle_.getLinearAcceleration()[1];
   acc.z = imu_handle_.getLinearAcceleration()[2];
   tf2::Transform odom2imu, imu2base, odom2base;
-  geometry_msgs::Vector3 angular_vel_base{}, linear_acc_base{};
+  geometry_msgs::Vector3 linear_acc_base{};
   double roll{}, pitch{}, yaw{};
   try
   {
-    tf2::doTransform(gyro, angular_vel_base, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
+    tf2::doTransform(gyro, angular_vel_base_, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
     geometry_msgs::TransformStamped tf_msg;
     tf_msg = tf_buffer_->lookupTransform(imu_handle_.getFrameId(), "base_link", time);
     tf2::fromMsg(tf_msg.transform, imu2base);
@@ -151,16 +159,16 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   else
     x_left[2] = 0.;
   x_left[0] = left_pos[1] + pitch;
-  x_left[1] = -left_spd[1] + angular_vel_base.y;
+  x_left[1] = -left_spd[1] + angular_vel_base_.y;
   x_left[4] = -pitch;
-  x_left[5] = -angular_vel_base.y;
+  x_left[5] = -angular_vel_base_.y;
   x_right = x_left;
   x_right[0] = right_pos[1] + pitch;
-  x_right[1] = -right_spd[1] + angular_vel_base.y;
+  x_right[1] = -right_spd[1] + angular_vel_base_.y;
 
   mode_manager_->getModeImpl()->updateEstimation(x_left, x_right);
   mode_manager_->getModeImpl()->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
-  mode_manager_->getModeImpl()->updateBaseState(angular_vel_base, linear_acc_base, roll, pitch, yaw);
+  mode_manager_->getModeImpl()->updateBaseState(angular_vel_base_, linear_acc_base, roll, pitch, yaw);
 }
 
 void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& period)
@@ -183,6 +191,25 @@ void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& p
     tf_pub_->msg_ = message;
     tf_pub_->unlockAndPublish();
   }
+  if (loop_count_ % 10 == 0)
+  {
+    if (odom_pub_->trylock())
+    {
+      odom_pub_->msg_.header.stamp = time;
+      odom_pub_->msg_.pose.pose.position.x = odom2base_.transform.translation.x;
+      odom_pub_->msg_.pose.pose.position.y = odom2base_.transform.translation.y;
+      odom_pub_->msg_.pose.pose.position.z = odom2base_.transform.translation.z;
+      odom_pub_->msg_.pose.pose.orientation = odom2base_.transform.rotation;
+      odom_pub_->msg_.twist.twist.linear.x =
+          (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
+      odom_pub_->msg_.twist.twist.linear.y = 0.;
+      odom_pub_->msg_.twist.twist.angular.z = angular_vel_base_.z;
+      odom_pub_->unlockAndPublish();
+    }
+    loop_count_ = 0;
+  }
+  loop_count_++;
+  ROS_INFO_STREAM(loop_count_);
 }
 
 void BipedalController::stopping(const ros::Time& time)
