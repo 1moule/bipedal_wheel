@@ -1,0 +1,17 @@
+<launch>
+    <!-- load configuration -->
+    <rosparam command="load" file="$(find imu_sensor_controller)/imu_sensor_controller.yaml"/>
+
+    <!-- spawn controller -->
+    <node name="imu_sensor_controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+          args="imu_sensor_controller"/>
+
+    <!-- robot_localization EKF node for the map frame -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="robot_localization_ekf_node_map"
+          clear_params="true" respawn="true" output="log">
+        <remap from="set_pose" to="initialpose"/>
+        <rosparam command="load" file="$(find bipedal_wheel_localization)/config/robot_localization.yaml"/>
+    </node>
+
+</launch>
+

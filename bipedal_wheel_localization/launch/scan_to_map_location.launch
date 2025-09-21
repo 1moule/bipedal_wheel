@@ -1,0 +1,9 @@
+<launch>
+
+    <node name="bipedal_wheel_localization"
+          pkg="bipedal_wheel_localization" type="bipedal_wheel_localization" output="screen" respawn="false">
+        <rosparam file="$(find bipedal_wheel_localization)/config/icp_params.yaml" command="load"/>
+    </node>
+
+    <include file="$(find bipedal_wheel_localization)/launch/robot_localization_icp.launch"/>
+</launch>
