@@ -32,7 +32,7 @@
             <static>1</static>
             <static>1</static>
             <link name='rmuc'>
-                <pose>-2 -0.6 0.0 0 0 0</pose>
+                <pose>-2 -0.6 -0.12 0 0 0</pose>
                 <visual name='visual'>
                     <geometry>
                         <mesh>
