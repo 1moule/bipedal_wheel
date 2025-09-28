@@ -1,6 +1,7 @@
 <launch>
     <!-- Arguments -->
-    <arg name="map_file" default="$(find bipedal_wheel_navigation)/maps/rmuc_map_draw.yaml"/>
+    <arg name="map" default="test_map"/>
+    <arg name="map_file" default="$(find bipedal_wheel_navigation)/maps/$(arg map).yaml"/>
     <arg name="open_rviz" default="true"/>
     <arg name="move_forward_only" default="false"/>
 
