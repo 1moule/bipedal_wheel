@@ -43,6 +43,8 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 
   if (!setupModelParams(controller_nh) || !setupLQR(controller_nh))
     return false;
+  x_left_.setZero();
+  x_right_.setZero();
 
   // Setup subscribers
   auto legCmdCallback = [this](const std_msgs::Float64::ConstPtr msg) { legCmd_ = *msg; };
@@ -151,22 +153,21 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
           right_spd);
 
   // update state
-  Eigen::Matrix<double, STATE_DIM, 1> x_left{}, x_right{};
-  x_left[3] =
+  x_left_[3] =
       (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-  if (abs(x_left[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
-    x_left[2] += x_left[3] * period.toSec();
+  if (abs(x_left_[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
+    x_left_[2] += x_left_[3] * period.toSec();
   else
-    x_left[2] = 0.;
-  x_left[0] = left_pos[1] + pitch;
-  x_left[1] = -left_spd[1] + angular_vel_base_.y;
-  x_left[4] = -pitch;
-  x_left[5] = -angular_vel_base_.y;
-  x_right = x_left;
-  x_right[0] = right_pos[1] + pitch;
-  x_right[1] = -right_spd[1] + angular_vel_base_.y;
+    x_left_[2] = 0.;
+  x_left_[0] = left_pos[1] + pitch;
+  x_left_[1] = -left_spd[1] + angular_vel_base_.y;
+  x_left_[4] = -pitch;
+  x_left_[5] = -angular_vel_base_.y;
+  x_right_ = x_left_;
+  x_right_[0] = right_pos[1] + pitch;
+  x_right_[1] = -right_spd[1] + angular_vel_base_.y;
 
-  mode_manager_->getModeImpl()->updateEstimation(x_left, x_right);
+  mode_manager_->getModeImpl()->updateEstimation(x_left_, x_right_);
   mode_manager_->getModeImpl()->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
   mode_manager_->getModeImpl()->updateBaseState(angular_vel_base_, linear_acc_base, roll, pitch, yaw);
 }

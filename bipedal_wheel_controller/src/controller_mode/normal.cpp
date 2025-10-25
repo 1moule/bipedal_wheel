@@ -8,8 +8,8 @@
 namespace bipedal_wheel_controller
 {
 Normal::Normal(const std::vector<hardware_interface::JointHandle*>& joint_handles,
-               const std::vector<control_toolbox::Pid*>& pid_legs, const control_toolbox::Pid& pid_yaw_vel,
-               const control_toolbox::Pid& pid_theta_diff, const control_toolbox::Pid& pid_roll)
+               const std::vector<control_toolbox::Pid*>& pid_legs,  control_toolbox::Pid* pid_yaw_vel,
+                control_toolbox::Pid* pid_theta_diff,  control_toolbox::Pid* pid_roll)
   : joint_handles_(joint_handles)
   , pid_legs_(pid_legs)
   , pid_yaw_vel_(pid_yaw_vel)
@@ -31,9 +31,9 @@ void Normal::execute(BipedalController* controller, const ros::Time& time, const
   auto vel_cmd_ = controller->getVelCmd();
 
   // PID
-  double T_yaw = pid_yaw_vel_.computeCommand(vel_cmd_.z - angular_vel_base_.z, period);
-  double T_theta_diff = pid_theta_diff_.computeCommand(left_pos_[1] - right_pos_[1], period);
-  double T_roll = pid_roll_.computeCommand(0. - roll_, period);
+  double T_yaw = pid_yaw_vel_->computeCommand(vel_cmd_.z - angular_vel_base_.z, period);
+  double T_theta_diff = pid_theta_diff_->computeCommand(left_pos_[1] - right_pos_[1], period);
+  double T_roll = pid_roll_->computeCommand(0. - roll_, period);
 
   // LQR
   auto coeffs_ = controller->getCoeffs();

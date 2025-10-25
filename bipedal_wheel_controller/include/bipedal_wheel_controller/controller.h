@@ -61,6 +61,7 @@ private:
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> coeffs_;
   Eigen::Matrix<double, STATE_DIM, STATE_DIM> q_{};
   Eigen::Matrix<double, CONTROL_DIM, CONTROL_DIM> r_{};
+  Eigen::Matrix<double, STATE_DIM, 1> x_left_{}, x_right_{};
 
   std::shared_ptr<ModelParams> model_params_;
 
