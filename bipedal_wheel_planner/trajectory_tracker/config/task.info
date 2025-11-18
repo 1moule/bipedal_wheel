@@ -1,0 +1,68 @@
+; Multiple_Shooting SQP settings
+sqp
+{
+  nThreads                              2
+  dt                                    0.1
+  sqpIteration                          10
+  inequalityConstraintMu                0.1
+  inequalityConstraintDelta             0.2
+  useFeedbackPolicy                     true
+  projectStateInputEqualityConstraints  true
+  printSolverStatistics                 false
+  printSolverStatus                     false
+  printLinesearch                       false
+  useFeedbackPolicy                     true
+  integratorType                        RK2
+  threadPriority                        50
+}
+
+; Rollout settings
+rollout
+{
+  AbsTolODE                       1e-5
+  RelTolODE                       1e-3
+  timeStep                        0.02
+  maxNumStepsPerSecond            10000
+  checkNumericalStability         true
+}
+
+mpc
+{
+  timeHorizon                     2.0  ; [s]
+  solutionTimeWindow              2.0   ; maximum [s]
+  coldStart                       false
+
+  debugPrint                      false
+
+  mpcDesiredFrequency             100  ; [Hz]
+  mrtDesiredFrequency             400 ; [Hz]
+}
+
+initialState
+{
+   (0,0)  0.0     ; x
+   (1,0)  0.0     ; y
+   (2,0)  0.0     ; phi
+}
+
+; standard state weight matrix
+Q
+{
+    (0,0)   25.0    ; x
+    (1,1)   25.0    ; y
+    (2,2)   10.0     ; phi
+}
+
+; control weight matrix
+R
+{
+    (0,0)   12.0     ; v
+    (1,1)   8.0     ; w
+}
+
+Q_final
+{
+    (0,0)   25.0    ; x
+    (1,1)   25.0    ; y
+    (2,2)   10.0   ; phi
+}
