@@ -25,7 +25,7 @@ void Normal::execute(BipedalController* controller, const ros::Time& time, const
     ROS_INFO("[balance] Enter NORMAL");
     controller->setStateChange(true);
   }
-  if (!controller->getCompleteStand() && abs(x_left_[4]) < 0.2)
+  if (!controller->getCompleteStand() && abs(x_left_[4]) < 0.2 && abs(x_left_[1]<0.2))
     controller->setCompleteStand(true);
 
   auto vel_cmd_ = controller->getVelCmd();

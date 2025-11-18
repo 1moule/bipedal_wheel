@@ -13,6 +13,7 @@ public:
   ~RampFilter() = default;
   void setAcc(double acc) { acc_ = acc; }
   void input(double input_value) { last_value_ += minAbs(input_value - last_value_, acc_ * dt_); }
+  void clear(){ last_value_ = 0.; }
   double output() { return last_value_; }
 
 private:

@@ -83,6 +83,11 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
     ramp_x_->input(vel_cmd_.linear.x);
     ramp_w_->input(vel_cmd_.angular.z);
   }
+  if(!complete_stand_)
+  {
+    ramp_x_->clear();
+    ramp_w_->clear();
+  }
   ramp_vel_cmd_.x = ramp_x_->output();
   ramp_vel_cmd_.z = ramp_w_->output();
 
