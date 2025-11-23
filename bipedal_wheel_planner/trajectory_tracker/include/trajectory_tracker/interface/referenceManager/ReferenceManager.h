@@ -12,7 +12,7 @@
 
 #include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>
 #include <geometry_msgs/PoseStamped.h>
-
+#include <visualization_msgs/Marker.h>
 #include "trajectory_tracker/interface/definitions.h"
 
 namespace trajectory_tracker {
@@ -37,5 +37,10 @@ class RosReferenceManager : public ocs2::ReferenceManagerDecorator {
   std::mutex goalMutex_;
   std::atomic_bool goalUpdated_;
   geometry_msgs::PoseStamped goal_;
+
+  ::ros::Subscriber trajSub_;
+  std::mutex trajMutex_;
+  std::atomic_bool trajUpdated_;
+  visualization_msgs::Marker traj_;
 };
 }  // namespace trajectory_tracker

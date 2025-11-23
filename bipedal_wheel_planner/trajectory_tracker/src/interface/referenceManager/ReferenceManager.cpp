@@ -75,36 +75,50 @@ void RosReferenceManager::preSolverRun(
   if (goalUpdated_) {
     std::lock_guard<std::mutex> lock(goalMutex_);
     goalUpdated_ = false;
-    ocs2::scalar_array_t timeTrajectory;
-    ocs2::vector_array_t stateTrajectory;
-    ocs2::vector_array_t inputTrajectory;
+    if (trajUpdated_) {
+      std::lock_guard<std::mutex> lock(trajMutex_);
+      trajUpdated_ = false;
+      ocs2::scalar_array_t timeTrajectory;
+      ocs2::vector_array_t stateTrajectory;
+      ocs2::vector_array_t inputTrajectory;
 
-    vector_t targetState = vector_t::Zero(STATE_DIM);
-    targetState(0) = goal_.pose.position.x;
-    targetState(1) = goal_.pose.position.y;
-    targetState(2) = tf::getYaw(goal_.pose.orientation);
+//      vector_t targetState = vector_t::Zero(STATE_DIM);
+//      targetState(0) = traj_.poses.begin()->position.x;
+//      targetState(1) = traj_.poses.begin()->position.y;
+//      targetState(2) = tf::getYaw(traj_.poses.begin()->orientation);
 
-    vector_t displacement = targetState - initState;
-    displacement(2) = angles::shortest_angular_distance(initState(2), targetState(2));
-    const int totalTimeStep = static_cast<int>(std::ceil(estimateTimeToTarget(displacement)) / 0.1);
+//      vector_t displacement = targetState - initState;
+//      displacement(2) = angles::shortest_angular_distance(initState(2), targetState(2));
+//      const int totalTimeStep =
+//        static_cast<int>(std::ceil(estimateTimeToTarget(displacement)) / 0.1);
 
-    Pose startPose, endPose;
-    startPose.position = {initState(0), initState(1)};
-    startPose.yaw = initState(2);
-    endPose.position = {targetState(0), targetState(1)};
-    endPose.yaw = targetState(2);
-    std::vector<Pose> trajectory = generateHermiteSpline(startPose, endPose, totalTimeStep);
+//      Pose startPose, endPose;
+//      startPose.position = {initState(0), initState(1)};
+//      startPose.yaw = initState(2);
+//      endPose.position = {targetState(0), targetState(1)};
+//      endPose.yaw = targetState(2);
+//      std::vector<Pose> trajectory = generateHermiteSpline(startPose, endPose, totalTimeStep);
 
-    for(size_t i = 0; i < totalTimeStep; i++)
-    {
-      const auto& point = trajectory[i];
-      Eigen::Vector4d referenceState;
-      referenceState << point.position.x(), point.position.y(), point.yaw;
-      stateTrajectory.push_back(referenceState);
-      timeTrajectory.push_back(initTime + i * 0.1);
-      inputTrajectory.push_back(Eigen::Vector2d::Zero(2));
+      auto last_ref = initState;
+      auto time = initTime;
+      for (size_t i = 0; i < traj_.points.size(); i++) {
+        const auto & point = traj_.points[i];
+        Eigen::Vector3d referenceState;
+        referenceState << point.x, point.y, tf::getYaw(goal_.pose.orientation);
+        vector_t displacement = referenceState - last_ref;
+        displacement(2) = angles::shortest_angular_distance(last_ref(2), referenceState(2));
+        const int reachTargetTime = estimateTimeToTarget(displacement);
+        time += reachTargetTime;
+        last_ref = referenceState;
+
+        stateTrajectory.push_back(referenceState);
+        timeTrajectory.push_back(time);
+        inputTrajectory.push_back(Eigen::Vector2d::Zero(2));
+      }
+
+      referenceManagerPtr_->setTargetTrajectories(
+        {timeTrajectory, stateTrajectory, inputTrajectory});
     }
-    referenceManagerPtr_->setTargetTrajectories({timeTrajectory, stateTrajectory, inputTrajectory});
   }
   referenceManagerPtr_->preSolverRun(initTime, finalTime, initState);
 }
@@ -116,5 +130,12 @@ void RosReferenceManager::subscribe(ros::NodeHandle &nodeHandle) {
     goal_ = *msg;
   };
   goalSub_ = nodeHandle.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
+
+  auto trajCallback = [this](const visualization_msgs::Marker::ConstPtr &msg) {
+    std::lock_guard<std::mutex> lock(trajMutex_);
+    trajUpdated_ = true;
+    traj_ = *msg;
+  };
+  trajSub_ = nodeHandle.subscribe<visualization_msgs::Marker>("/ego_planner_node/optimal_list", 1, trajCallback);
 }
 }  // namespace trajectory_tracker
