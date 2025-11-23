@@ -36,6 +36,7 @@
     <depend>roscpp</depend>
 
     <depend>bipedal_wheel_common</depend>
+    <depend>bipedal_wheel_estimation</depend>
 
     <depend>controller_interface</depend>
     <depend>effort_controllers</depend>

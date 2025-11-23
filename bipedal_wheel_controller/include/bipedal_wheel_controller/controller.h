@@ -6,6 +6,7 @@
 
 #include <bipedal_wheel_common/lqr.h>
 #include <bipedal_wheel_common/filter.h>
+#include <bipedal_wheel_estimation/FromTopiceEstimate.h>
 #include <control_toolbox/pid.h>
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -68,6 +69,9 @@ private:
   int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
   std::unique_ptr<ModeManager> mode_manager_;
+
+  // estimation
+  std::shared_ptr<bipedal_wheel_estimation::FromTopicStateEstimate> stateEstimate_;
 
   // stand up
   bool complete_stand_ = false, overturn_ = false;

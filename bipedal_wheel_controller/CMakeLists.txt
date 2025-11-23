@@ -14,6 +14,7 @@ find_package(catkin REQUIRED
         roscpp
 
         bipedal_wheel_common
+        bipedal_wheel_estimation
 
         controller_interface
         effort_controllers
@@ -41,6 +42,7 @@ catkin_package(
         roscpp
 
         bipedal_wheel_common
+        bipedal_wheel_estimation
 
         controller_interface
         effort_controllers
