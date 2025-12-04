@@ -16,7 +16,7 @@
     <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
     <xacro:VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" organize_cloud="${organize_cloud}" hz="10"
                   samples="1875" min_range="0.1" gpu="${gpu}">
-        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <origin xyz="0 0 0.11" rpy="0 0 0"/>
     </xacro:VLP-16>
 
     <xacro:if value="$(arg use_simulation)">
@@ -24,6 +24,19 @@
             <plugin name="gazebo_ros_control" filename="libbipedal_hw_sim.so">
                 <robotNamespace>/</robotNamespace>
                 <robotSimType>bipedal_wheel_gazebo/BipedalHWSim</robotSimType>
+            </plugin>
+        </gazebo>
+
+        <gazebo>
+            <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+                <alwaysOn>true</alwaysOn>
+                <updateRate>500.0</updateRate>
+                <bodyName>base_link</bodyName>
+                <topicName>ground_truth/state</topicName>
+                <gaussianNoise>0.0</gaussianNoise>
+                <frameName>world</frameName>
+                <xyzOffsets>0 0 0</xyzOffsets>
+                <rpyOffsets>0 0 0</rpyOffsets>
             </plugin>
         </gazebo>
     </xacro:if>
