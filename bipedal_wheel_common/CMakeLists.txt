@@ -14,6 +14,7 @@ catkin_package(
         include
         ${EIGEN3_INCLUDE_DIR}
         LIBRARIES
+        ${PROJECT_NAME}
         CATKIN_DEPENDS
         DEPENDS
 )
@@ -24,9 +25,9 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} INTERFACE)
-
-target_include_directories(${PROJECT_NAME} INTERFACE include)
+file(GLOB_RECURSE sources "src/*.cpp")
+add_library(${PROJECT_NAME} SHARED ${sources})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 #########################
 ###   CLANG TOOLING   ###
@@ -60,8 +61,3 @@ install(
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         FILES_MATCHING PATTERN "*.h"
 )
-
-install(PROGRAMS scripts/generate_urdf.sh
-        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/scripts
-)
-
