@@ -92,6 +92,8 @@ double CanFrameCodec::getMaxPosition(MotorType motorType)
   switch (motorType) {
     case MotorType::DM4310:
       return 12.5;
+    case MotorType::DM8009:
+      return 12.5;
     default:
       ROS_ERROR("[bipedal_wheel_hw::CanFrameCodec::getMaxPosition] Unknown motor type");
       return 0;
@@ -103,6 +105,8 @@ double CanFrameCodec::getMaxVelocity(MotorType motorType)
   switch (motorType) {
     case MotorType::DM4310:
       return 30;
+    case MotorType::DM8009:
+      return 45;
     default:
       ROS_ERROR("[bipedal_wheel_hw::CanFrameCodec::getMaxVelocity] Unknown motor type");
       return 0;
@@ -114,6 +118,8 @@ double CanFrameCodec::getMaxTorque(MotorType motorType)
   switch (motorType) {
     case MotorType::DM4310:
       return 10;
+    case MotorType::DM8009:
+      return 54;
     default:
       ROS_ERROR("[bipedal_wheel_hw::CanFrameCodec::getMaxTorque] Unknown motor type");
       return 0;
@@ -124,6 +130,7 @@ double CanFrameCodec::getMaxKp(MotorType motorType)
 {
   switch (motorType) {
     case MotorType::DM4310:
+    case MotorType::DM8009:
       return 500;
     default:
       ROS_ERROR("[bipedal_wheel_hw::CanFrameCodec::getMaxKp] Unknown motor type");
@@ -135,6 +142,7 @@ double CanFrameCodec::getMaxKd(MotorType motorType)
 {
   switch (motorType) {
     case MotorType::DM4310:
+    case MotorType::DM8009:
       return 5;
     default:
       ROS_ERROR("[bipedal_wheel_hw::CanFrameCodec::getMaxKd] Unknown motor type");
@@ -150,9 +158,11 @@ MotorType CanFrameCodec::getMotoTypeFromString(const std::string & motorTypeStri
     return MotorType::M2006;
   } else if (motorTypeString == "rm_6020") {
     return MotorType::GM6020;
-  } else if (motorTypeString == "dm_4310")
+  } else if (motorTypeString == "dm_4310"){
     return MotorType::DM4310;
-  else {
+  } else if (motorTypeString == "dm_8009") {
+    return MotorType::DM8009;
+  } else {
     ROS_ERROR("[bipedal_wheel_hw::CanFrameCodec::getMotoTypeFromString] Unknown motor type");
     return MotorType::M3508;
   }

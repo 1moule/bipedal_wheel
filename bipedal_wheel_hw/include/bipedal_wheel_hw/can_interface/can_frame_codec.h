@@ -8,7 +8,7 @@
 
 namespace bipedal_wheel_hw
 {
-enum class MotorType { M3508, M2006, GM6020, DM4310 };
+enum class MotorType { M3508, M2006, GM6020, DM4310, DM8009};
 
 class CanFrameCodec
 {
