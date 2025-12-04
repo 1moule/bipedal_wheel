@@ -1,0 +1,11 @@
+<launch>
+    <arg name="add_wheel" default="true"/>
+
+    <param name="robot_description"
+           command="$(find xacro)/xacro $(find bipedal_wheel_description)/urdf/bipedal.urdf.xacro use_simulation:=false
+           add_wheel:=$(arg add_wheel)"/>
+    <rosparam file="$(find bipedal_wheel_hw)/config/actuator_coefficient.yaml" command="load" ns="bipedal_wheel_hw"/>
+    <rosparam file="$(find bipedal_wheel_hw)/config/hardware.yaml" command="load"/>
+
+    <node name="bipedal_wheel_hw" pkg="bipedal_wheel_hw" type="bipedal_wheel_hw"/>
+</launch>
