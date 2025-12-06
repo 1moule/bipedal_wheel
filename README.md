@@ -88,3 +88,7 @@ catkin build
      ```
      roslaunch trajectory_tracker tracker.launch
      ```
+## Reference
+[1] https://github.com/qiayuanl/legged_control
+
+[2] https://github.com/SCAU-RM-NAV/rm2023_auto_sentry_ws
