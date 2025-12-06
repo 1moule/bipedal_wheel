@@ -129,10 +129,10 @@
                          wheel_z_offset="${wheel_z_offset}" mechanical_reduction="19.2032"/>
         </xacro:if>
 
-<!--        <xacro:guide_wheel prefix="left_front" x_offset="0.24" y_offset="0.1" z_offset="-0.08"/>-->
-<!--        <xacro:guide_wheel prefix="right_front" x_offset="0.24" y_offset="-0.1" z_offset="-0.08"/>-->
-<!--        <xacro:guide_wheel prefix="left_back" x_offset="-0.24" y_offset="0.1" z_offset="-0.08"/>-->
-<!--        <xacro:guide_wheel prefix="right_back" x_offset="-0.24" y_offset="-0.1" z_offset="-0.08"/>-->
+        <xacro:guide_wheel prefix="left_front" x_offset="0.24" y_offset="0.1" z_offset="-0.08"/>
+        <xacro:guide_wheel prefix="right_front" x_offset="0.24" y_offset="-0.1" z_offset="-0.08"/>
+        <xacro:guide_wheel prefix="left_back" x_offset="-0.24" y_offset="0.1" z_offset="-0.08"/>
+        <xacro:guide_wheel prefix="right_back" x_offset="-0.24" y_offset="-0.1" z_offset="-0.08"/>
 
     </xacro:macro>
 
