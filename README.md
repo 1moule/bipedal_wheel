@@ -31,7 +31,7 @@ git clone https://github.com/1moule/bipedal_wheel
    
    ```
    catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
-   catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization
+   catkin build
    ```
    
 ### build
