@@ -181,43 +181,44 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
 
 void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& period)
 {
-  stateEstimate_->update(time, period);
-//  geometry_msgs::Vector3 linear_vel_base, linear_vel_odom;
-//  linear_vel_base.x =
-//      (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-//  linear_vel_base.y = 0.;
-//  linear_vel_base.z = 0.;
-//  tf2::doTransform(linear_vel_base, linear_vel_odom, odom2base_);
-//  odom2base_.header.stamp = time;
-//  odom2base_.transform.translation.x += linear_vel_odom.x * period.toSec();
-//  odom2base_.transform.translation.y += linear_vel_odom.y * period.toSec();
-//  //  odom2base_.transform.translation.z += linear_vel_odom.z * period.toSec();
-//  tf2_msgs::TFMessage message;
-//  message.transforms.push_back(odom2base_);
-//  tf_buffer_->setTransform(odom2base_, "bipedal_wheel_controller", true);
-//  if (tf_pub_->trylock())
-//  {
-//    tf_pub_->msg_ = message;
-//    tf_pub_->unlockAndPublish();
-//  }
-//  if (loop_count_ % 10 == 0)
-//  {
-//    if (odom_pub_->trylock())
-//    {
-//      odom_pub_->msg_.header.stamp = time;
-//      odom_pub_->msg_.pose.pose.position.x = odom2base_.transform.translation.x;
-//      odom_pub_->msg_.pose.pose.position.y = odom2base_.transform.translation.y;
-//      odom_pub_->msg_.pose.pose.position.z = odom2base_.transform.translation.z;
-//      odom_pub_->msg_.pose.pose.orientation = odom2base_.transform.rotation;
-//      odom_pub_->msg_.twist.twist.linear.x =
-//          (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-//      odom_pub_->msg_.twist.twist.linear.y = 0.;
-//      odom_pub_->msg_.twist.twist.angular.z = angular_vel_base_.z;
-//      odom_pub_->unlockAndPublish();
-//    }
-//    loop_count_ = 0;
-//  }
-//  loop_count_++;
+//  stateEstimate_->update(time, period);
+
+  geometry_msgs::Vector3 linear_vel_base, linear_vel_odom;
+  linear_vel_base.x =
+      (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
+  linear_vel_base.y = 0.;
+  linear_vel_base.z = 0.;
+  tf2::doTransform(linear_vel_base, linear_vel_odom, odom2base_);
+  odom2base_.header.stamp = time;
+  odom2base_.transform.translation.x += linear_vel_odom.x * period.toSec();
+  odom2base_.transform.translation.y += linear_vel_odom.y * period.toSec();
+  //  odom2base_.transform.translation.z += linear_vel_odom.z * period.toSec();
+  tf2_msgs::TFMessage message;
+  message.transforms.push_back(odom2base_);
+  tf_buffer_->setTransform(odom2base_, "bipedal_wheel_controller", true);
+  if (tf_pub_->trylock())
+  {
+    tf_pub_->msg_ = message;
+    tf_pub_->unlockAndPublish();
+  }
+  if (loop_count_ % 10 == 0)
+  {
+    if (odom_pub_->trylock())
+    {
+      odom_pub_->msg_.header.stamp = time;
+      odom_pub_->msg_.pose.pose.position.x = odom2base_.transform.translation.x;
+      odom_pub_->msg_.pose.pose.position.y = odom2base_.transform.translation.y;
+      odom_pub_->msg_.pose.pose.position.z = odom2base_.transform.translation.z;
+      odom_pub_->msg_.pose.pose.orientation = odom2base_.transform.rotation;
+      odom_pub_->msg_.twist.twist.linear.x =
+          (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
+      odom_pub_->msg_.twist.twist.linear.y = 0.;
+      odom_pub_->msg_.twist.twist.angular.z = angular_vel_base_.z;
+      odom_pub_->unlockAndPublish();
+    }
+    loop_count_ = 0;
+  }
+  loop_count_++;
 }
 
 void BipedalController::stopping(const ros::Time& time)
