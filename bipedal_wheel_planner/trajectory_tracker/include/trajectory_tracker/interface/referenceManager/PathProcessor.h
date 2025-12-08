@@ -141,17 +141,17 @@ private:
     const geometry_msgs::Point & pointA, const geometry_msgs::Point & pointB,
     const geometry_msgs::Point & pointC)
   {
-    double area = 0.5 * std::abs(
-                          pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) +
-                          pointC.x * (pointA.y - pointB.y));
+    double signedArea = 0.5 * (pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) +
+                               pointC.x * (pointA.y - pointB.y));
 
     double lengthAB = std::hypot(pointA.x - pointB.x, pointA.y - pointB.y);
     double lengthBC = std::hypot(pointB.x - pointC.x, pointB.y - pointC.y);
     double lengthAC = std::hypot(pointA.x - pointC.x, pointA.y - pointC.y);
 
     if (lengthAB < 1e-4 || lengthBC < 1e-4 || lengthAC < 1e-4) return 0.0;
+    double curvature = (4.0 * signedArea) / (lengthAB * lengthBC * lengthAC);
 
-    return (4.0 * area) / (lengthAB * lengthBC * lengthAC);
+    return curvature;
   }
 };
 }  // namespace trajectory_tracker

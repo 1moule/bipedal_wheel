@@ -56,9 +56,10 @@ void RosReferenceManager::preSolverRun(
     vector_t targetInput = vector_t::Zero(INPUT_DIM);
     targetState(0) = lookaheadResult.x;
     targetState(1) = lookaheadResult.y;
-    targetState(2) = lookaheadResult.theta;
+    targetState(2) =
+      initState(2) + angles::shortest_angular_distance(initState(2), lookaheadResult.theta);
     targetInput(0) = std::hypot(odom_.twist.twist.linear.x, odom_.twist.twist.linear.y);
-    targetInput(1) = normalizeAngle(targetInput(0) * lookaheadResult.curvature);
+    targetInput(1) = targetInput(0) * lookaheadResult.curvature;
 
     scalar_t estimatedTimeToTarget = estimateTimeToTarget(targetState - initState);
 
