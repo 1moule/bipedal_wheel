@@ -10,7 +10,8 @@ find_package(catkin REQUIRED
         ocs2_sqp
         ocs2_oc
         ocs2_ros_interfaces
-        tf
+        tf2_ros
+        nav_msgs
 )
 
 find_package(Boost REQUIRED COMPONENTS
@@ -33,7 +34,8 @@ catkin_package(
         ocs2_sqp
         ocs2_oc
         ocs2_ros_interfaces
-        tf
+        tf2_ros
+        nav_msgs
         DEPENDS
 )
 

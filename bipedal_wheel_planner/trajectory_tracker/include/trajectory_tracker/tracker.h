@@ -6,7 +6,8 @@
 
 #include <ocs2_mpc/MPC_MRT_Interface.h>
 #include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 
 #include "trajectory_tracker/interface/AckermanInterface.h"
 #include "trajectory_tracker/interface/referenceManager/ReferenceManager.h"
@@ -30,6 +31,8 @@ class Tracker {
 
   // State Estimation
   SystemObservation currentObservation_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // MPC
   std::shared_ptr<MPC_BASE> mpc_;
@@ -41,7 +44,6 @@ class Tracker {
 
   // ROS
   ros::Publisher observationPublisher_, cmdVelPublisher;
-  ros::Subscriber odomSub_;
   ros::Time last_observation_time_;
 };
 }  // namespace trajectory_tracker

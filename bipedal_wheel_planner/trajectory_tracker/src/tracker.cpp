@@ -18,21 +18,13 @@ Tracker::Tracker(ros::NodeHandle &nh) {
   std::string libFolder;
   nh.getParam("/taskFile", taskFile);
   nh.getParam("/libFolder", libFolder);
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(ros::Duration(10));
+  tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
   ackerman_interface_ = std::make_shared<AckermanInterface>(taskFile, libFolder);
   setupMpc(nh);
   setupMrt();
   initMpc();
 
-  auto odomCallback = [this](const nav_msgs::Odometry::ConstPtr &msg) {
-    currentObservation_.state(0) = msg->pose.pose.position.x;
-    currentObservation_.state(1) = msg->pose.pose.position.y;
-    currentObservation_.state(2) = tf::getYaw(msg->pose.pose.orientation);
-    if((msg->header.stamp-last_observation_time_).toSec()<0.1)
-      currentObservation_.time+=(msg->header.stamp-last_observation_time_).toSec();
-    last_observation_time_=msg->header.stamp;
-
-  };
-  odomSub_=nh.subscribe<nav_msgs::Odometry>("/odom", 1, odomCallback);
   cmdVelPublisher=nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 }
 
@@ -59,6 +51,19 @@ void Tracker::initMpc() {
 
 void Tracker::update() {
   // Update the current state of the system
+  try
+  {
+    auto pose = tf_buffer_->lookupTransform("map", "base_link", ros::Time(0));
+    currentObservation_.state(0) = pose.transform.translation.x;
+    currentObservation_.state(1) = pose.transform.translation.y;
+    currentObservation_.state(2) = tf::getYaw(pose.transform.rotation);
+  }
+  catch (tf2::TransformException& ex)
+  {
+    ROS_WARN("%s", ex.what());
+    return;
+  }
+  currentObservation_.time += 0.01;
   mpcMrtInterface_->setCurrentObservation(currentObservation_);
 
   // Load the latest MPC policy
