@@ -75,19 +75,6 @@ catkin build
      roslaunch bipedal_wheel_navigation navigation.launch
      ```
 
-+ Run Trajectory tracker
-  1. Run the simulation:
-     
-     ```
-     roslaunch bipedal_wheel_gazebo empty_world.launch
-     ```
-
-  2. Load and start controller as the previous steps and **DO NOT** publish topic /cmd_vel
-  3. Run trajectory tracker
-     
-     ```
-     roslaunch trajectory_tracker tracker.launch
-     ```
 ## Reference
 [1] https://github.com/qiayuanl/legged_control
 
