@@ -60,7 +60,7 @@ void Tracker::update()
     auto pose = tf_buffer_->lookupTransform("map", "base_link", ros::Time(0));
     currentObservation_.state(0) = pose.transform.translation.x;
     currentObservation_.state(1) = pose.transform.translation.y;
-    currentObservation_.state(2) = tf::getYaw(pose.transform.rotation);
+    currentObservation_.state(3) = tf::getYaw(pose.transform.rotation);
   } catch (tf2::TransformException & ex) {
     ROS_WARN("%s", ex.what());
     return;
@@ -84,7 +84,7 @@ void Tracker::update()
 
   // Publish cmd vel
   geometry_msgs::Twist twist;
-  twist.linear.x = optimizedInput(0);
+  twist.linear.x = optimizedState(2);
   twist.angular.z = optimizedInput(1);
   cmdVelPublisher.publish(twist);
 }
