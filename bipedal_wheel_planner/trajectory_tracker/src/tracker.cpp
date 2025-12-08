@@ -11,8 +11,10 @@
 #include <ocs2_sqp/SqpMpc.h>
 #include <tf/tf.h>
 
-namespace trajectory_tracker {
-Tracker::Tracker(ros::NodeHandle &nh) {
+namespace trajectory_tracker
+{
+Tracker::Tracker(ros::NodeHandle & nh)
+{
   // Initialize OCS2
   std::string taskFile;
   std::string libFolder;
@@ -25,16 +27,18 @@ Tracker::Tracker(ros::NodeHandle &nh) {
   setupMrt();
   initMpc();
 
-  cmdVelPublisher=nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+  cmdVelPublisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 }
 
-void Tracker::initMpc() {
+void Tracker::initMpc()
+{
   // Initial state
   currentObservation_.state.setZero(STATE_DIM);
   currentObservation_.input.setZero(INPUT_DIM);
 
   TargetTrajectories target_trajectories(
-      {currentObservation_.time}, {ackerman_interface_->getInitialState()}, {currentObservation_.input});
+    {currentObservation_.time}, {ackerman_interface_->getInitialState()},
+    {currentObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
   mpcMrtInterface_->setCurrentObservation(currentObservation_);
@@ -49,17 +53,15 @@ void Tracker::initMpc() {
   mpcRunning_ = true;
 }
 
-void Tracker::update() {
+void Tracker::update()
+{
   // Update the current state of the system
-  try
-  {
+  try {
     auto pose = tf_buffer_->lookupTransform("map", "base_link", ros::Time(0));
     currentObservation_.state(0) = pose.transform.translation.x;
     currentObservation_.state(1) = pose.transform.translation.y;
     currentObservation_.state(2) = tf::getYaw(pose.transform.rotation);
-  }
-  catch (tf2::TransformException& ex)
-  {
+  } catch (tf2::TransformException & ex) {
     ROS_WARN("%s", ex.what());
     return;
   }
@@ -73,12 +75,12 @@ void Tracker::update() {
   ocs2::vector_t optimizedState, optimizedInput;
   size_t plannedMode = 0;  // The mode that is active at the time the policy is evaluated at.
   mpcMrtInterface_->evaluatePolicy(
-      currentObservation_.time, currentObservation_.state, optimizedState, optimizedInput,
-      plannedMode);
+    currentObservation_.time, currentObservation_.state, optimizedState, optimizedInput,
+    plannedMode);
 
   currentObservation_.input = optimizedInput;
   observationPublisher_.publish(
-      ocs2::ros_msg_conversions::createObservationMsg(currentObservation_));
+    ocs2::ros_msg_conversions::createObservationMsg(currentObservation_));
 
   // Publish cmd vel
   geometry_msgs::Twist twist;
@@ -87,21 +89,23 @@ void Tracker::update() {
   cmdVelPublisher.publish(twist);
 }
 
-void Tracker::setupMpc(ros::NodeHandle &nh) {
+void Tracker::setupMpc(ros::NodeHandle & nh)
+{
   mpc_ = std::make_shared<SqpMpc>(
-      ackerman_interface_->mpcSettings(), ackerman_interface_->sqpSettings(),
-      ackerman_interface_->getOptimalControlProblem(), ackerman_interface_->getInitializer());
+    ackerman_interface_->mpcSettings(), ackerman_interface_->sqpSettings(),
+    ackerman_interface_->getOptimalControlProblem(), ackerman_interface_->getInitializer());
   auto rosReferenceManagerPtr = std::make_shared<trajectory_tracker::RosReferenceManager>(
-      ackerman_interface_->getReferenceManagerPtr());
+    ackerman_interface_->getReferenceManagerPtr());
   rosReferenceManagerPtr->subscribe(nh);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
 
   std::string robotName = "ackerman";
   observationPublisher_ =
-      nh.advertise<ocs2_msgs::mpc_observation>(robotName + "_mpc_observation", 1);
+    nh.advertise<ocs2_msgs::mpc_observation>(robotName + "_mpc_observation", 1);
 }
 
-void Tracker::setupMrt() {
+void Tracker::setupMrt()
+{
   mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
   mpcMrtInterface_->initRollout(&ackerman_interface_->getRollout());
   mpcTimer_.reset();
@@ -111,15 +115,15 @@ void Tracker::setupMrt() {
     while (trackerRunning_) {
       try {
         executeAndSleep(
-            [&]() {
-              if (mpcRunning_) {
-                mpcTimer_.startTimer();
-                mpcMrtInterface_->advanceMpc();
-                mpcTimer_.endTimer();
-              }
-            },
-            ackerman_interface_->mpcSettings().mpcDesiredFrequency_);
-      } catch (const std::exception &e) {
+          [&]() {
+            if (mpcRunning_) {
+              mpcTimer_.startTimer();
+              mpcMrtInterface_->advanceMpc();
+              mpcTimer_.endTimer();
+            }
+          },
+          ackerman_interface_->mpcSettings().mpcDesiredFrequency_);
+      } catch (const std::exception & e) {
         trackerRunning_ = false;
         ROS_ERROR_STREAM("[Ocs2 MPC thread] Error : " << e.what());
       }

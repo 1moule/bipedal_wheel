@@ -12,18 +12,20 @@
 #include "trajectory_tracker/interface/AckermanInterface.h"
 #include "trajectory_tracker/interface/referenceManager/ReferenceManager.h"
 
-namespace trajectory_tracker {
+namespace trajectory_tracker
+{
 using namespace ocs2;
 
-class Tracker {
- public:
-  Tracker(ros::NodeHandle &nh);
+class Tracker
+{
+public:
+  Tracker(ros::NodeHandle & nh);
   ~Tracker() = default;
   void initMpc();
   void update();
 
- private:
-  void setupMpc(ros::NodeHandle &nh);
+private:
+  void setupMpc(ros::NodeHandle & nh);
   void setupMrt();
 
   // Interface

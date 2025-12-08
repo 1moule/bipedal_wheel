@@ -4,17 +4,19 @@
 
 #pragma once
 
-#include <nav_msgs/Path.h>
 #include <geometry_msgs/Point.h>
+#include <nav_msgs/Path.h>
 #include <tf2/utils.h>
-#include <vector>
+
+#include <algorithm>
 #include <cmath>
 #include <limits>
-#include <algorithm>
+#include <vector>
 
 namespace trajectory_tracker
 {
-struct LookAheadResult {
+struct LookAheadResult
+{
   double x = 0.0;
   double y = 0.0;
   double theta = 0.0;
@@ -22,10 +24,12 @@ struct LookAheadResult {
   bool isValid = false;
 };
 
-class PathProcessor {
+class PathProcessor
+{
 public:
-  static nav_msgs::Path prunePath(const nav_msgs::Path& globalPath,
-                                  const geometry_msgs::Point& robotPosition) {
+  static nav_msgs::Path prunePath(
+    const nav_msgs::Path & globalPath, const geometry_msgs::Point & robotPosition)
+  {
     if (globalPath.poses.empty()) return globalPath;
 
     double minDistanceSquared = std::numeric_limits<double>::max();
@@ -48,24 +52,25 @@ public:
     size_t remainingPointsCount = globalPath.poses.size() - closestPointIndex;
     if (remainingPointsCount > 0) {
       prunedPath.poses.reserve(remainingPointsCount);
-      prunedPath.poses.insert(prunedPath.poses.end(),
-                              globalPath.poses.begin() + closestPointIndex,
-                              globalPath.poses.end());
+      prunedPath.poses.insert(
+        prunedPath.poses.end(), globalPath.poses.begin() + closestPointIndex,
+        globalPath.poses.end());
     }
 
     return prunedPath;
   }
 
-  static LookAheadResult computeLookAheadPoint(const nav_msgs::Path& path,
-                                               const geometry_msgs::Point& robotPosition,
-                                               double lookaheadDistance) {
+  static LookAheadResult computeLookAheadPoint(
+    const nav_msgs::Path & path, const geometry_msgs::Point & robotPosition,
+    double lookaheadDistance)
+  {
     LookAheadResult result;
     if (path.poses.empty()) return result;
 
     double lookaheadDistanceSquared = lookaheadDistance * lookaheadDistance;
 
     for (size_t i = 0; i < path.poses.size(); ++i) {
-      const auto& currentPoint = path.poses[i].pose.position;
+      const auto & currentPoint = path.poses[i].pose.position;
       double diffX = currentPoint.x - robotPosition.x;
       double diffY = currentPoint.y - robotPosition.y;
       double distanceToRobotSquared = diffX * diffX + diffY * diffY;
@@ -80,8 +85,8 @@ public:
           return result;
         }
 
-        const auto& segmentStartPoint = path.poses[i - 1].pose.position;
-        const auto& segmentEndPoint = path.poses[i].pose.position;
+        const auto & segmentStartPoint = path.poses[i - 1].pose.position;
+        const auto & segmentEndPoint = path.poses[i].pose.position;
 
         double segmentVectorX = segmentEndPoint.x - segmentStartPoint.x;
         double segmentVectorY = segmentEndPoint.y - segmentStartPoint.y;
@@ -89,8 +94,11 @@ public:
         double robotToStartVectorY = segmentStartPoint.y - robotPosition.y;
 
         double coeffA = segmentVectorX * segmentVectorX + segmentVectorY * segmentVectorY;
-        double coeffB = 2.0 * (robotToStartVectorX * segmentVectorX + robotToStartVectorY * segmentVectorY);
-        double coeffC = (robotToStartVectorX * robotToStartVectorX + robotToStartVectorY * robotToStartVectorY) - lookaheadDistanceSquared;
+        double coeffB =
+          2.0 * (robotToStartVectorX * segmentVectorX + robotToStartVectorY * segmentVectorY);
+        double coeffC =
+          (robotToStartVectorX * robotToStartVectorX + robotToStartVectorY * robotToStartVectorY) -
+          lookaheadDistanceSquared;
 
         double discriminant = coeffB * coeffB - 4 * coeffA * coeffC;
         double interpolationFactor = 0.0;
@@ -106,8 +114,9 @@ public:
         result.theta = std::atan2(segmentVectorY, segmentVectorX);
 
         if (i + 1 < path.poses.size()) {
-          const auto& nextPoint = path.poses[i + 1].pose.position;
-          result.curvature = calculateMengerCurvature(segmentStartPoint, segmentEndPoint, nextPoint);
+          const auto & nextPoint = path.poses[i + 1].pose.position;
+          result.curvature =
+            calculateMengerCurvature(segmentStartPoint, segmentEndPoint, nextPoint);
         } else {
           result.curvature = 0.0;
         }
@@ -117,7 +126,7 @@ public:
       }
     }
 
-    const auto& finalPose = path.poses.back();
+    const auto & finalPose = path.poses.back();
     result.x = finalPose.pose.position.x;
     result.y = finalPose.pose.position.y;
     result.theta = tf2::getYaw(finalPose.pose.orientation);
@@ -128,12 +137,13 @@ public:
   }
 
 private:
-  static double calculateMengerCurvature(const geometry_msgs::Point& pointA,
-                                         const geometry_msgs::Point& pointB,
-                                         const geometry_msgs::Point& pointC) {
-    double area = 0.5 * std::abs(pointA.x * (pointB.y - pointC.y) +
-                                 pointB.x * (pointC.y - pointA.y) +
-                                 pointC.x * (pointA.y - pointB.y));
+  static double calculateMengerCurvature(
+    const geometry_msgs::Point & pointA, const geometry_msgs::Point & pointB,
+    const geometry_msgs::Point & pointC)
+  {
+    double area = 0.5 * std::abs(
+                          pointA.x * (pointB.y - pointC.y) + pointB.x * (pointC.y - pointA.y) +
+                          pointC.x * (pointA.y - pointB.y));
 
     double lengthAB = std::hypot(pointA.x - pointB.x, pointA.y - pointB.y);
     double lengthBC = std::hypot(pointB.x - pointC.x, pointB.y - pointC.y);
@@ -144,4 +154,4 @@ private:
     return (4.0 * area) / (lengthAB * lengthBC * lengthAC);
   }
 };
-}
+}  // namespace trajectory_tracker

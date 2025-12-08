@@ -4,42 +4,44 @@
 
 #pragma once
 
+#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
+#include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>
 #include <ros/ros.h>
 
 #include <memory>
 #include <string>
 #include <utility>
 
-#include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <nav_msgs/Odometry.h>
-
 #include "trajectory_tracker/interface/definitions.h"
 #include "trajectory_tracker/interface/referenceManager/PathProcessor.h"
 
-namespace trajectory_tracker {
+namespace trajectory_tracker
+{
 using ocs2::scalar_t;
 using ocs2::vector_t;
 
-struct Pose {
+struct Pose
+{
   Eigen::Vector2d position;
   double yaw{};
 };
 
-class RosReferenceManager : public ocs2::ReferenceManagerDecorator {
- public:
+class RosReferenceManager : public ocs2::ReferenceManagerDecorator
+{
+public:
   RosReferenceManager(std::shared_ptr<ReferenceManagerInterface> referenceManagerPtr);
   ~RosReferenceManager() override = default;
 
-  void subscribe(ros::NodeHandle &nodeHandle);
-  void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t &initState) override;
+  void subscribe(ros::NodeHandle & nodeHandle);
+  void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t & initState) override;
 
- private:
-   double normalizeAngle(double angle)
-   {
-     angle = std::fmod(angle + M_PI, 2.0 * M_PI);
-     return (angle <= 0.0) ? angle + M_PI : angle - M_PI;
-   }
+private:
+  double normalizeAngle(double angle)
+  {
+    angle = std::fmod(angle + M_PI, 2.0 * M_PI);
+    return (angle <= 0.0) ? angle + M_PI : angle - M_PI;
+  }
 
   ::ros::Subscriber trajSub_;
   std::mutex trajMutex_;
