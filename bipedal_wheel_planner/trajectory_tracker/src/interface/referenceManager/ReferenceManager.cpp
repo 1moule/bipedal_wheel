@@ -42,7 +42,7 @@ void RosReferenceManager::preSolverRun(
     currentPosition.y = initState(1);
     currentPosition.z = 0.0;
     auto path = pathProcessor_->prunePath(traj_, currentPosition);
-    auto lookahead_result = pathProcessor_->computeLookAheadPoint(
+    auto lookaheadResult = pathProcessor_->computeLookAheadPoint(
         path, currentPosition, 1.0);
 
     ocs2::scalar_array_t timeTrajectory;
@@ -51,11 +51,11 @@ void RosReferenceManager::preSolverRun(
 
     vector_t targetState = vector_t::Zero(STATE_DIM);
     vector_t targetInput = vector_t::Zero(INPUT_DIM);
-    targetState(0) = lookahead_result.x;
-    targetState(1) = lookahead_result.y;
-    targetState(2) = lookahead_result.theta;
+    targetState(0) = lookaheadResult.x;
+    targetState(1) = lookaheadResult.y;
+    targetState(2) = lookaheadResult.theta;
     targetInput(0) = std::hypot(odom_.twist.twist.linear.x, odom_.twist.twist.linear.y);
-    targetInput(1) = normalizeAngle(targetInput(0) * lookahead_result.kappa);
+    targetInput(1) = normalizeAngle(targetInput(0) * lookaheadResult.curvature);
 
     scalar_t estimatedTimeToTarget = estimateTimeToTarget(targetState - initState);
 
