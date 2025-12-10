@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-28.
 //
 
-#include "bipedal_wheel_planner/interface/AckermanInterface.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/AckermanInterface.h"
 
 #include <ocs2_core/initialization/DefaultInitializer.h>
 #include <ocs2_core/misc/LoadData.h>
@@ -10,8 +10,8 @@
 #include <iostream>
 #include <string>
 
-#include "bipedal_wheel_planner/interface/cost/AckermanQuadraticTrackingCost.h"
-#include "bipedal_wheel_planner/interface/dynamics/AckermanDynamics.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/cost/AckermanQuadraticTrackingCost.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/dynamics/AckermanDynamics.h"
 
 // Boost
 #include <boost/filesystem/operations.hpp>

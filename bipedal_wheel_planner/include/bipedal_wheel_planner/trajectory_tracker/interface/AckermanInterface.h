@@ -13,7 +13,7 @@
 #include <ocs2_robotic_tools/common/RobotInterface.h>
 #include <ocs2_sqp/SqpSettings.h>
 
-#include "bipedal_wheel_planner/interface/definitions.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/definitions.h"
 
 namespace bipedal_wheel_planner
 {

@@ -50,10 +50,10 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}
-        src/interface/AckermanInterface.cpp
-        src/interface/dynamics/AckermanDynamics.cpp
-        src/interface/referenceManager/ReferenceManager.cpp
-        src/tracker.cpp
+        src/trajectory_tracker/interface/AckermanInterface.cpp
+        src/trajectory_tracker/interface/dynamics/AckermanDynamics.cpp
+        src/trajectory_tracker/interface/referenceManager/ReferenceManager.cpp
+        src/trajectory_tracker/tracker.cpp
         src/main.cpp
 )
 

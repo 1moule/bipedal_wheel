@@ -13,8 +13,8 @@
 #include <string>
 #include <utility>
 
-#include "bipedal_wheel_planner/interface/definitions.h"
-#include "bipedal_wheel_planner/interface/referenceManager/PathProcessor.h"
+#include "../definitions.h"
+#include "PathProcessor.h"
 
 namespace bipedal_wheel_planner
 {

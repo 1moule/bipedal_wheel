@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-28.
 //
 
-#include "bipedal_wheel_planner/interface/referenceManager/ReferenceManager.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/referenceManager/ReferenceManager.h"
 
 #include <angles/angles.h>
 #include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>

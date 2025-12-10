@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-28.
 //
 
-#include "bipedal_wheel_planner/tracker.h"
+#include "bipedal_wheel_planner/trajectory_tracker/tracker.h"
 
 #include <ocs2_core/thread_support/ExecuteAndSleep.h>
 #include <ocs2_core/thread_support/SetThreadPriority.h>

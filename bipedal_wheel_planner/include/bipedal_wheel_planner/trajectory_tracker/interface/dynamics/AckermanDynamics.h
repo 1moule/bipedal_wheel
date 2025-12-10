@@ -7,7 +7,7 @@
 #include <ocs2_core/Types.h>
 #include <ocs2_core/dynamics/SystemDynamicsBase.h>
 
-#include "bipedal_wheel_planner/interface/definitions.h"
+#include "../definitions.h"
 
 namespace bipedal_wheel_planner
 {

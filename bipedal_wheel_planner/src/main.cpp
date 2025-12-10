@@ -2,7 +2,7 @@
 // Created by guanlin on 25-11-11.
 //
 
-#include "bipedal_wheel_planner/tracker.h"
+#include "bipedal_wheel_planner/trajectory_tracker/tracker.h"
 
 int main(int argc, char ** argv)
 {

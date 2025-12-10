@@ -9,8 +9,8 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-#include "bipedal_wheel_planner/interface/AckermanInterface.h"
-#include "bipedal_wheel_planner/interface/referenceManager/ReferenceManager.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/AckermanInterface.h"
+#include "bipedal_wheel_planner/trajectory_tracker/interface/referenceManager/ReferenceManager.h"
 
 namespace bipedal_wheel_planner
 {
