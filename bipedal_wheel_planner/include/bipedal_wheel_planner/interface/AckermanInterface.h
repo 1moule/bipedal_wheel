@@ -13,9 +13,9 @@
 #include <ocs2_robotic_tools/common/RobotInterface.h>
 #include <ocs2_sqp/SqpSettings.h>
 
-#include "trajectory_tracker/interface/definitions.h"
+#include "bipedal_wheel_planner/interface/definitions.h"
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 using namespace ocs2;
 
@@ -52,4 +52,4 @@ private:
 
   vector_t initialState_{STATE_DIM};
 };
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

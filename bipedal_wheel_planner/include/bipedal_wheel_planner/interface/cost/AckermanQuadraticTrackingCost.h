@@ -8,7 +8,7 @@
 #include <ocs2_core/cost/QuadraticStateCost.h>
 #include <ocs2_core/cost/QuadraticStateInputCost.h>
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 using namespace ocs2;
 
@@ -56,4 +56,4 @@ private:
     return state - xNominal;
   }
 };
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

@@ -13,7 +13,7 @@
 #include <limits>
 #include <vector>
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 struct LookAheadResult
 {
@@ -154,4 +154,4 @@ private:
     return curvature;
   }
 };
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

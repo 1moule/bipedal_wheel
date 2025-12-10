@@ -7,9 +7,9 @@
 #include <ocs2_core/Types.h>
 #include <ocs2_core/dynamics/SystemDynamicsBase.h>
 
-#include "trajectory_tracker/interface/definitions.h"
+#include "bipedal_wheel_planner/interface/definitions.h"
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 using namespace ocs2;
 
@@ -31,4 +31,4 @@ public:
     ocs2::scalar_t t, const ocs2::vector_t & x, const ocs2::vector_t & u,
     const ocs2::PreComputation & preComp) override;
 };
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

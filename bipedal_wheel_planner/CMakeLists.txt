@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(trajectory_tracker)
+project(bipedal_wheel_planner)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

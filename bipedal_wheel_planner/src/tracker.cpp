@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-28.
 //
 
-#include "trajectory_tracker/tracker.h"
+#include "bipedal_wheel_planner/tracker.h"
 
 #include <ocs2_core/thread_support/ExecuteAndSleep.h>
 #include <ocs2_core/thread_support/SetThreadPriority.h>
@@ -11,7 +11,7 @@
 #include <ocs2_sqp/SqpMpc.h>
 #include <tf/tf.h>
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 Tracker::Tracker(ros::NodeHandle & nh)
 {
@@ -94,7 +94,7 @@ void Tracker::setupMpc(ros::NodeHandle & nh)
   mpc_ = std::make_shared<SqpMpc>(
     ackerman_interface_->mpcSettings(), ackerman_interface_->sqpSettings(),
     ackerman_interface_->getOptimalControlProblem(), ackerman_interface_->getInitializer());
-  auto rosReferenceManagerPtr = std::make_shared<trajectory_tracker::RosReferenceManager>(
+  auto rosReferenceManagerPtr = std::make_shared<bipedal_wheel_planner::RosReferenceManager>(
     ackerman_interface_->getReferenceManagerPtr());
   rosReferenceManagerPtr->subscribe(nh);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
@@ -132,4 +132,4 @@ void Tracker::setupMrt()
   setThreadPriority(ackerman_interface_->sqpSettings().threadPriority, mpcThread_);
 }
 
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

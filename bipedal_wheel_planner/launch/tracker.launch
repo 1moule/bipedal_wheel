@@ -1,0 +1,6 @@
+<launch>
+    <param name="taskFile" value="$(find bipedal_wheel_planner)/config/task.info"/>
+    <param name="libFolder" value="$(find bipedal_wheel_planner)/auto_generated"/>
+
+    <node name="bipedal_wheel_planner" pkg="bipedal_wheel_planner" type="bipedal_wheel_planner" output="screen"/>
+</launch>

@@ -2,19 +2,19 @@
 // Created by guanlin on 25-9-28.
 //
 
-#include "trajectory_tracker/interface/referenceManager/ReferenceManager.h"
+#include "bipedal_wheel_planner/interface/referenceManager/ReferenceManager.h"
 
 #include <angles/angles.h>
 #include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>
 #include <tf/tf.h>
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 RosReferenceManager::RosReferenceManager(
   std::shared_ptr<ReferenceManagerInterface> referenceManagerPtr)
 : ReferenceManagerDecorator(std::move(referenceManagerPtr))
 {
-  pathProcessor_ = std::make_unique<trajectory_tracker::PathProcessor>();
+  pathProcessor_ = std::make_unique<bipedal_wheel_planner::PathProcessor>();
 }
 
 scalar_t estimateTimeToTarget(const vector_t & desiredBaseDisplacement)
@@ -95,4 +95,4 @@ void RosReferenceManager::subscribe(ros::NodeHandle & nodeHandle)
 
   optimizedPathPub_ = nodeHandle.advertise<nav_msgs::Path>("/optimized_path", 1);
 }
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

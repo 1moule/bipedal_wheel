@@ -9,10 +9,10 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-#include "trajectory_tracker/interface/AckermanInterface.h"
-#include "trajectory_tracker/interface/referenceManager/ReferenceManager.h"
+#include "bipedal_wheel_planner/interface/AckermanInterface.h"
+#include "bipedal_wheel_planner/interface/referenceManager/ReferenceManager.h"
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 using namespace ocs2;
 
@@ -48,4 +48,4 @@ private:
   ros::Publisher observationPublisher_, cmdVelPublisher;
   ros::Time last_observation_time_;
 };
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

@@ -13,10 +13,10 @@
 #include <string>
 #include <utility>
 
-#include "trajectory_tracker/interface/definitions.h"
-#include "trajectory_tracker/interface/referenceManager/PathProcessor.h"
+#include "bipedal_wheel_planner/interface/definitions.h"
+#include "bipedal_wheel_planner/interface/referenceManager/PathProcessor.h"
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 using ocs2::scalar_t;
 using ocs2::vector_t;
@@ -42,6 +42,6 @@ private:
 
   ros::Publisher optimizedPathPub_;
 
-  std::unique_ptr<trajectory_tracker::PathProcessor> pathProcessor_;
+  std::unique_ptr<bipedal_wheel_planner::PathProcessor> pathProcessor_;
 };
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

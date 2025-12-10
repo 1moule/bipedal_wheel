@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>trajectory_tracker</name>
+    <name>bipedal_wheel_planner</name>
     <version>0.0.0</version>
-    <description>The trajectory_tracker package</description>
+    <description>The bipedal_wheel_planner package</description>
 
     <!-- One maintainer tag required, multiple allowed, one person per tag -->
     <!-- Example:  -->
@@ -19,7 +19,7 @@
     <!-- Url tags are optional, but multiple are allowed, one per tag -->
     <!-- Optional attribute type can be: website, bugtracker, or repository -->
     <!-- Example: -->
-    <!-- <url type="website">http://wiki.ros.org/trajectory_tracker</url> -->
+    <!-- <url type="website">http://wiki.ros.org/bipedal_wheel_planner</url> -->
 
 
     <!-- Author tags are optional, multiple are allowed, one per tag -->

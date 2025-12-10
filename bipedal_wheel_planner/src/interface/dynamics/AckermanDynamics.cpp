@@ -2,9 +2,9 @@
 // Created by guanlin on 25-9-28.
 //
 
-#include "trajectory_tracker/interface/dynamics/AckermanDynamics.h"
+#include "bipedal_wheel_planner/interface/dynamics/AckermanDynamics.h"
 
-namespace trajectory_tracker
+namespace bipedal_wheel_planner
 {
 ocs2::vector_t AckermanDynamics::computeFlowMap(
   ocs2::scalar_t time, const ocs2::vector_t & state, const ocs2::vector_t & input,
@@ -42,4 +42,4 @@ ocs2::VectorFunctionLinearApproximation AckermanDynamics::linearApproximation(
 
   return dynamics;
 }
-}  // namespace trajectory_tracker
+}  // namespace bipedal_wheel_planner

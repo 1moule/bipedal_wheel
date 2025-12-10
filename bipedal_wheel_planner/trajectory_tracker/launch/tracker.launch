@@ -1,6 +1,0 @@
-<launch>
-    <param name="taskFile" value="$(find trajectory_tracker)/config/task.info"/>
-    <param name="libFolder" value="$(find trajectory_tracker)/auto_generated"/>
-
-    <node name="trajectory_tracker" pkg="trajectory_tracker" type="trajectory_tracker" output="screen"/>
-</launch>
