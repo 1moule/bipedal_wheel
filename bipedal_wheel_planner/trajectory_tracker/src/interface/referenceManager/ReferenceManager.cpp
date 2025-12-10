@@ -37,15 +37,14 @@ void RosReferenceManager::preSolverRun(
     odomUpdated_ = false;
     odom = odom_;
   }
-  if (trajUpdated_ && !traj_.poses.empty()) {
-    std::lock_guard<std::mutex> lock(trajMutex_);
-    trajUpdated_ = false;
+  if (!globalPath_.poses.empty()) {
+    std::lock_guard<std::mutex> lock(pathMutex_);
 
     geometry_msgs::Point currentPosition;
     currentPosition.x = initState(0);
     currentPosition.y = initState(1);
     currentPosition.z = 0.0;
-    auto path = pathProcessor_->prunePath(traj_, currentPosition);
+    auto path = pathProcessor_->prunePath(globalPath_, currentPosition);
     auto lookaheadResult = pathProcessor_->computeLookAheadPoint(path, currentPosition, 1.0);
 
     ocs2::scalar_array_t timeTrajectory;
@@ -73,18 +72,19 @@ void RosReferenceManager::preSolverRun(
     inputTrajectory.assign(2, targetInput);
 
     referenceManagerPtr_->setTargetTrajectories({timeTrajectory, stateTrajectory, inputTrajectory});
+
+    optimizedPathPub_.publish(path);
   }
   referenceManagerPtr_->preSolverRun(initTime, finalTime, initState);
 }
 
 void RosReferenceManager::subscribe(ros::NodeHandle & nodeHandle)
 {
-  auto trajCallback = [this](const nav_msgs::Path::ConstPtr & msg) {
-    std::lock_guard<std::mutex> lock(trajMutex_);
-    trajUpdated_ = true;
-    traj_ = *msg;
+  auto pathCallback = [this](const nav_msgs::Path::ConstPtr & msg) {
+    std::lock_guard<std::mutex> lock(pathMutex_);
+    globalPath_ = *msg;
   };
-  trajSub_ = nodeHandle.subscribe<nav_msgs::Path>("/move_base/NavfnROS/plan", 1, trajCallback);
+  pathSub_ = nodeHandle.subscribe<nav_msgs::Path>("/move_base/NavfnROS/plan", 1, pathCallback);
 
   auto odomCallback = [this](const nav_msgs::Odometry::ConstPtr & msg) {
     std::lock_guard<std::mutex> lock(odomMutex_);
@@ -92,5 +92,7 @@ void RosReferenceManager::subscribe(ros::NodeHandle & nodeHandle)
     odom_ = *msg;
   };
   odomSub_ = nodeHandle.subscribe<nav_msgs::Odometry>("/odom", 1, odomCallback);
+
+  optimizedPathPub_ = nodeHandle.advertise<nav_msgs::Path>("/optimized_path", 1);
 }
 }  // namespace trajectory_tracker
