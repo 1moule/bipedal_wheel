@@ -54,6 +54,7 @@ add_executable(${PROJECT_NAME}
         src/trajectory_tracker/interface/dynamics/AckermanDynamics.cpp
         src/trajectory_tracker/interface/referenceManager/ReferenceManager.cpp
         src/trajectory_tracker/tracker.cpp
+        src/trajectory_generator/generator.cpp
         src/main.cpp
 )
 

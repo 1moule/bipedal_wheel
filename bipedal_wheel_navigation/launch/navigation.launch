@@ -21,7 +21,7 @@
     <include file="$(find bipedal_wheel_navigation)/launch/move_base.launch"/>
 
     <!-- trajectory tracker -->
-    <include file="$(find trajectory_tracker)/launch/tracker.launch"/>
+    <include file="$(find bipedal_wheel_planner)/launch/tracker.launch"/>
 
     <!-- rviz -->
     <group if="$(arg open_rviz)">
