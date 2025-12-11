@@ -16,7 +16,8 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle & nh)
     double resolution = msg->info.resolution;
     double size_x = msg->info.width * resolution;
     double size_y = msg->info.height * resolution;
-    gridMap_->init(size_x, size_y, resolution);
+    Eigen::Vector2d origin(msg->info.origin.position.x, msg->info.origin.position.y);
+    gridMap_->init(size_x, size_y, resolution, origin);
     grid_map::RowMatrixXi map(msg->info.width, msg->info.height);
     for (int x = 0; x < msg->info.width; ++x) {
       for (int y = 0; y < msg->info.height; ++y) {
