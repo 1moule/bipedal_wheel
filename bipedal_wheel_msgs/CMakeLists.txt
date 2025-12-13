@@ -10,7 +10,7 @@ add_message_files(
         FILES
         ActuatorState.msg
         LocationInfo.msg
-#        ControlPoint.msg
+        Trajectory.msg
 )
 
 add_service_files(
