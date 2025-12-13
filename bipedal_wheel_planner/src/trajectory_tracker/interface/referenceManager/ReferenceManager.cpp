@@ -37,8 +37,10 @@ void RosReferenceManager::preSolverRun(
     odomUpdated_ = false;
     odom = odom_;
   }
-  if (!referenceTrajectory_.pos.empty()) {
+  if (trajectoryUpdated_ && !referenceTrajectory_.pos.empty()) {
     std::lock_guard<std::mutex> lock(trajectoryMutex_);
+    trajectoryUpdated_ = false;
+    if (referenceTrajectory_.targetUpdate) startTime_ = initTime;
 
     //    geometry_msgs::Point currentPosition;
     //    currentPosition.x = initState(0);
@@ -81,7 +83,7 @@ void RosReferenceManager::preSolverRun(
         return targetInput;
       }();
 
-      timeTrajectory.push_back(initTime + i * 0.1);
+      timeTrajectory.push_back(startTime_ + referenceTrajectory_.time[i]);
       stateTrajectory.push_back(targetState);
       inputTrajectory.emplace_back(vector_t::Zero(INPUT_DIM));
     }
@@ -94,6 +96,7 @@ void RosReferenceManager::subscribe(ros::NodeHandle & nodeHandle)
 {
   auto trajectoryCallback = [this](const bipedal_wheel_msgs::Trajectory::ConstPtr & msg) {
     std::lock_guard<std::mutex> lock(trajectoryMutex_);
+    trajectoryUpdated_ = true;
     referenceTrajectory_ = *msg;
   };
   trajectorySub_ = nodeHandle.subscribe<bipedal_wheel_msgs::Trajectory>(

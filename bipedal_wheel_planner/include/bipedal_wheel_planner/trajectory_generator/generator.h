@@ -22,7 +22,7 @@ class TrajectoryGenerator
 public:
   TrajectoryGenerator(ros::NodeHandle & nh);
   ~TrajectoryGenerator() = default;
-  
+
   void update(const ros::Duration & duraction);
 
 private:
@@ -35,10 +35,11 @@ private:
   std::unique_ptr<TrajOpt::TrajectoryOptimizer> optimizer_;
 
   ros::Subscriber gridMapSub_, goalSub_;
-  ros::Publisher aStarPathPub_, referenceTrajectoryPub_;
+  ros::Publisher aStarPathPub_, referenceTrajectoryPub_, referencePosPub_;
 
   Eigen::Vector2d currentPos{0, 0}, goal_;
 
   double trajectoryTime_{};
+  bool targetUpdate_{false};
 };
 }  // namespace bipedal_wheel_planner

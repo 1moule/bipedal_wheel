@@ -34,6 +34,7 @@ public:
 private:
   ::ros::Subscriber trajectorySub_;
   std::mutex trajectoryMutex_;
+  std::atomic_bool trajectoryUpdated_;
   bipedal_wheel_msgs::Trajectory referenceTrajectory_;
 
   ::ros::Subscriber odomSub_;
@@ -42,5 +43,7 @@ private:
   nav_msgs::Odometry odom_;
 
   std::unique_ptr<bipedal_wheel_planner::PathProcessor> pathProcessor_;
+
+  double startTime_{};
 };
 }  // namespace bipedal_wheel_planner

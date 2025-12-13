@@ -76,32 +76,51 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle & nh)
     }
     aStarPathPub_.publish(path);
     trajectoryTime_ = 0.;
+    targetUpdate_ = true;
   };
   goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
 
   referenceTrajectoryPub_ =
     nh.advertise<bipedal_wheel_msgs::Trajectory>("/reference_trajectory", 1);
+  referencePosPub_ = nh.advertise<nav_msgs::Path>("/reference_pos", 1);
 }
 
 void TrajectoryGenerator::update(const ros::Duration & duraction)
 {
   if (optimizer_ != nullptr) {
+    // Get current position
+    Eigen::Vector2d currentPos;
+    try {
+      auto pose = tfBuffer_->lookupTransform("map", "base_link", ros::Time(0));
+      currentPos << pose.transform.translation.x, pose.transform.translation.y;
+    } catch (tf2::TransformException & ex) {
+      ROS_WARN("Could not get robot pose: %s", ex.what());
+      return;
+    }
+
+    // Find nearest point in trajectory
+    double closestPointTime = trajectoryTime_;
+    double minSquaredDistance = std::numeric_limits<double>::max();
+    const auto & trajectory = optimizer_->getOptimizedTrajectory();
+    double totalTime = trajectory.getEndTime();
+    for (double t = 0; t < totalTime; t += 0.1) {
+      Eigen::Vector2d pointOnTrajectory = trajectory.evaluate(t);
+      double currentSquaredDistance = (pointOnTrajectory - currentPos).squaredNorm();
+      if (currentSquaredDistance < minSquaredDistance) {
+        minSquaredDistance = currentSquaredDistance;
+        closestPointTime = t;
+      }
+    }
+    trajectoryTime_ = closestPointTime;
+
     // Set star time and end time
-    double endTime{};
-    if (trajectoryTime_ > optimizer_->getOptimizedTrajectory().getEndTime())
-      trajectoryTime_ = optimizer_->getOptimizedTrajectory().getEndTime();
-    if (trajectoryTime_ + 1.0 > optimizer_->getOptimizedTrajectory().getEndTime())
-      endTime = optimizer_->getOptimizedTrajectory().getEndTime();
-    else
-      endTime = trajectoryTime_ + 1.0;
+    double startTime = std::min(trajectoryTime_, totalTime);
+    double endTime = std::min(startTime + 1.0, totalTime);
 
     // Get reference trajectory
-    auto posReference = optimizer_->getOptimizedTrajectory().evaluate(
-      trajectoryTime_, endTime, 0.1);  // Sample every 0.1s
-    auto velReference = optimizer_->getOptimizedTrajectory().evaluate(
-      trajectoryTime_, endTime, 0.1, 1);  // Sample every 0.1s
-    auto accReference = optimizer_->getOptimizedTrajectory().evaluate(
-      trajectoryTime_, endTime, 0.1, 2);  // Sample every 0.1s
+    auto posReference = trajectory.evaluate(startTime, endTime, 0.1);     // Sample every 0.1s
+    auto velReference = trajectory.evaluate(startTime, endTime, 0.1, 1);  // Sample every 0.1s
+    auto accReference = trajectory.evaluate(startTime, endTime, 0.1, 2);  // Sample every 0.1s
 
     // Publish reference trajectory
     bipedal_wheel_msgs::Trajectory msg;
@@ -130,9 +149,28 @@ void TrajectoryGenerator::update(const ros::Duration & duraction)
       acc.linear.x = accReference[i].x();
       acc.linear.y = accReference[i].y();
       msg.acc.push_back(acc);
+
+      // time
+      msg.time.push_back(startTime + i * 0.1);
     }
+    msg.targetUpdate = targetUpdate_;
     referenceTrajectoryPub_.publish(msg);
-    trajectoryTime_ += duraction.toSec();
+    targetUpdate_ = false;
+
+    nav_msgs::Path path;
+    path.header.frame_id = "map";
+    path.header.stamp = ros::Time::now();
+    for (const auto & t : msg.pos) {
+      geometry_msgs::PoseStamped pose;
+      pose.header = path.header;
+      pose.pose.position.x = t.position.x;
+      pose.pose.position.y = t.position.y;
+      pose.pose.position.z = 0.;
+      pose.pose.orientation.w = 1;
+      path.poses.push_back(pose);
+    }
+    referencePosPub_.publish(path);
   }
 }
+
 }  // namespace bipedal_wheel_planner
