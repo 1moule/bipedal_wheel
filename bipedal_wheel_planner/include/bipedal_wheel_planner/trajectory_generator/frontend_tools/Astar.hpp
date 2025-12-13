@@ -101,13 +101,13 @@ public:
   : map_(map), safe_threshold_(safe_threshold)
   {
     // Initialize default parameters (can be loaded from config file)
-    max_vel_ = 1.0;
-    max_acc_ = 1.0;
+    max_vel_ = 2.0;
+    max_acc_ = 3.0;
     time_resolution_ = 0.2;
     min_traj_num_ = 3;
     traj_cut_length_ = 8.0;
     distance_weight_ = 1.0;
-    yaw_weight_ = 0.5;
+    yaw_weight_ = 15.0;
   }
 
   Trajectory planWithPostProcessing(

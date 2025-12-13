@@ -12,6 +12,7 @@ find_package(catkin REQUIRED
         ocs2_ros_interfaces
         tf2_ros
         nav_msgs
+        bipedal_wheel_msgs
 )
 
 find_package(Boost REQUIRED COMPONENTS
@@ -36,6 +37,7 @@ catkin_package(
         ocs2_ros_interfaces
         tf2_ros
         nav_msgs
+        bipedal_wheel_msgs
         DEPENDS
 )
 
@@ -53,6 +55,7 @@ add_executable(${PROJECT_NAME}
         src/trajectory_tracker/interface/AckermanInterface.cpp
         src/trajectory_tracker/interface/dynamics/AckermanDynamics.cpp
         src/trajectory_tracker/interface/referenceManager/ReferenceManager.cpp
+        src/trajectory_tracker/interface/constraint/CollisionConstraint.cpp
         src/trajectory_tracker/tracker.cpp
         src/trajectory_generator/generator.cpp
         src/main.cpp

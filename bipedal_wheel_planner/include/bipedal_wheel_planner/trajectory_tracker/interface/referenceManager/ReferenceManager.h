@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <bipedal_wheel_msgs/Trajectory.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>
@@ -31,16 +32,14 @@ public:
   void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t & initState) override;
 
 private:
-  ::ros::Subscriber pathSub_;
-  std::mutex pathMutex_;
-  nav_msgs::Path globalPath_;
+  ::ros::Subscriber trajectorySub_;
+  std::mutex trajectoryMutex_;
+  bipedal_wheel_msgs::Trajectory referenceTrajectory_;
 
   ::ros::Subscriber odomSub_;
   std::mutex odomMutex_;
   std::atomic_bool odomUpdated_;
   nav_msgs::Odometry odom_;
-
-  ros::Publisher optimizedPathPub_;
 
   std::unique_ptr<bipedal_wheel_planner::PathProcessor> pathProcessor_;
 };

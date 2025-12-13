@@ -22,6 +22,8 @@ class TrajectoryGenerator
 public:
   TrajectoryGenerator(ros::NodeHandle & nh);
   ~TrajectoryGenerator() = default;
+  
+  void update(const ros::Duration & duraction);
 
 private:
   std::shared_ptr<grid_map::GridMap> gridMap_;
@@ -30,10 +32,13 @@ private:
   std::unique_ptr<tf2_ros::TransformListener> tfListener_;
 
   std::unique_ptr<path_planning::AStar> astar_;
+  std::unique_ptr<TrajOpt::TrajectoryOptimizer> optimizer_;
 
   ros::Subscriber gridMapSub_, goalSub_;
-  ros::Publisher aStarPathPub_;
+  ros::Publisher aStarPathPub_, referenceTrajectoryPub_;
 
   Eigen::Vector2d currentPos{0, 0}, goal_;
+
+  double trajectoryTime_{};
 };
 }  // namespace bipedal_wheel_planner

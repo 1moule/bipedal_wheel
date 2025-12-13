@@ -37,54 +37,67 @@ void RosReferenceManager::preSolverRun(
     odomUpdated_ = false;
     odom = odom_;
   }
-  if (!globalPath_.poses.empty()) {
-    std::lock_guard<std::mutex> lock(pathMutex_);
+  if (!referenceTrajectory_.pos.empty()) {
+    std::lock_guard<std::mutex> lock(trajectoryMutex_);
 
-    geometry_msgs::Point currentPosition;
-    currentPosition.x = initState(0);
-    currentPosition.y = initState(1);
-    currentPosition.z = 0.0;
-    auto path = pathProcessor_->prunePath(globalPath_, currentPosition);
-    auto lookaheadResult = pathProcessor_->computeLookAheadPoint(path, currentPosition, 1.0);
+    //    geometry_msgs::Point currentPosition;
+    //    currentPosition.x = initState(0);
+    //    currentPosition.y = initState(1);
+    //    currentPosition.z = 0.0;
+    //    auto path = pathProcessor_->prunePath(globalPath_, currentPosition);
 
     ocs2::scalar_array_t timeTrajectory;
     ocs2::vector_array_t stateTrajectory;
     ocs2::vector_array_t inputTrajectory;
 
-    vector_t targetState = vector_t::Zero(STATE_DIM);
-    vector_t targetInput = vector_t::Zero(INPUT_DIM);
-    targetState(0) = lookaheadResult.x;
-    targetState(1) = lookaheadResult.y;
-    if (
-      abs(angles::shortest_angular_distance(initState(3), lookaheadResult.theta)) >
-      abs(angles::shortest_angular_distance(initState(3) + M_PI, lookaheadResult.theta)))
-      targetState(3) = initState(3) + angles::shortest_angular_distance(
-                                        initState(3) + M_PI, lookaheadResult.theta);
-    else
-      targetState(3) =
-        initState(3) + angles::shortest_angular_distance(initState(3), lookaheadResult.theta);
-    targetInput(1) = targetInput(0) * lookaheadResult.curvature;
+    for (int i = 0; i < referenceTrajectory_.pos.size(); ++i) {
+      // Set target state
+      const vector_t targetState = [&]() {
+        vector_t targetState = vector_t::Zero(STATE_DIM);
+        targetState(0) = referenceTrajectory_.pos[i].position.x;
+        targetState(1) = referenceTrajectory_.pos[i].position.y;
+        targetState(2) = std::sqrt(
+          referenceTrajectory_.vel[i].linear.x * referenceTrajectory_.vel[i].linear.x +
+          referenceTrajectory_.vel[i].linear.y * referenceTrajectory_.vel[i].linear.y);
+        targetState(3) = tf::getYaw(referenceTrajectory_.pos[i].orientation);
+        if (
+          abs(angles::shortest_angular_distance(initState(3), targetState(3))) >
+          abs(angles::shortest_angular_distance(initState(3) + M_PI, targetState(3))))
+          targetState(3) =
+            initState(3) + angles::shortest_angular_distance(initState(3) + M_PI, targetState(3));
+        else
+          targetState(3) =
+            initState(3) + angles::shortest_angular_distance(initState(3), targetState(3));
+        return targetState;
+      }();
 
-    scalar_t estimatedTimeToTarget = estimateTimeToTarget(targetState - initState);
+      // Set target input
+      const vector_t targetInput = [&]() {
+        vector_t targetInput = vector_t::Zero(INPUT_DIM);
+        targetInput(0) = std::sqrt(
+          referenceTrajectory_.acc[i].linear.x * referenceTrajectory_.acc[i].linear.x +
+          referenceTrajectory_.acc[i].linear.y * referenceTrajectory_.acc[i].linear.y);
+        targetInput(1) = referenceTrajectory_.vel[i].angular.z;
+        return targetInput;
+      }();
 
-    timeTrajectory = {initTime, initTime + estimatedTimeToTarget};
-    stateTrajectory.assign(2, targetState);
-    inputTrajectory.assign(2, targetInput);
-
+      timeTrajectory.push_back(initTime + i * 0.1);
+      stateTrajectory.push_back(targetState);
+      inputTrajectory.emplace_back(vector_t::Zero(INPUT_DIM));
+    }
     referenceManagerPtr_->setTargetTrajectories({timeTrajectory, stateTrajectory, inputTrajectory});
-
-    optimizedPathPub_.publish(path);
   }
   referenceManagerPtr_->preSolverRun(initTime, finalTime, initState);
 }
 
 void RosReferenceManager::subscribe(ros::NodeHandle & nodeHandle)
 {
-  auto pathCallback = [this](const nav_msgs::Path::ConstPtr & msg) {
-    std::lock_guard<std::mutex> lock(pathMutex_);
-    globalPath_ = *msg;
+  auto trajectoryCallback = [this](const bipedal_wheel_msgs::Trajectory::ConstPtr & msg) {
+    std::lock_guard<std::mutex> lock(trajectoryMutex_);
+    referenceTrajectory_ = *msg;
   };
-  pathSub_ = nodeHandle.subscribe<nav_msgs::Path>("/move_base/NavfnROS/plan", 1, pathCallback);
+  trajectorySub_ = nodeHandle.subscribe<bipedal_wheel_msgs::Trajectory>(
+    "/reference_trajectory", 1, trajectoryCallback);
 
   auto odomCallback = [this](const nav_msgs::Odometry::ConstPtr & msg) {
     std::lock_guard<std::mutex> lock(odomMutex_);
@@ -92,7 +105,5 @@ void RosReferenceManager::subscribe(ros::NodeHandle & nodeHandle)
     odom_ = *msg;
   };
   odomSub_ = nodeHandle.subscribe<nav_msgs::Odometry>("/odom", 1, odomCallback);
-
-  optimizedPathPub_ = nodeHandle.advertise<nav_msgs::Path>("/optimized_path", 1);
 }
 }  // namespace bipedal_wheel_planner

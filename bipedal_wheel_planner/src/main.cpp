@@ -14,9 +14,13 @@ int main(int argc, char ** argv)
   bipedal_wheel_planner::TrajectoryGenerator generator(nh);
 
   ros::Rate loop_rate(100);
+  ros::Time last_time = ros::Time::now();
   while (ros::ok()) {
-    ros::spinOnce();
     tracker.update();
+    generator.update(ros::Time::now() - last_time);
+    last_time = ros::Time::now();
+
+    ros::spinOnce();
     loop_rate.sleep();
   }
   return 0;
