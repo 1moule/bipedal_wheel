@@ -42,15 +42,30 @@ void RosReferenceManager::preSolverRun(
     trajectoryUpdated_ = false;
     if (referenceTrajectory_.targetUpdate) startTime_ = initTime;
 
-    //    geometry_msgs::Point currentPosition;
-    //    currentPosition.x = initState(0);
-    //    currentPosition.y = initState(1);
-    //    currentPosition.z = 0.0;
-    //    auto path = pathProcessor_->prunePath(globalPath_, currentPosition);
-
     ocs2::scalar_array_t timeTrajectory;
     ocs2::vector_array_t stateTrajectory;
     ocs2::vector_array_t inputTrajectory;
+
+    // Set current yaw
+    scalar_t currentYaw = initState(3);
+    if (
+      abs(angles::shortest_angular_distance(
+        initState(3), tf::getYaw(referenceTrajectory_.pos[0].orientation))) >
+      (abs(angles::shortest_angular_distance(
+        initState(3) + M_PI, tf::getYaw(referenceTrajectory_.pos[0].orientation)))))
+      currentYaw += M_PI;
+
+    // Insert yaw transition trajectory
+    scalar_t dyaw = angles::shortest_angular_distance(
+      currentYaw, tf::getYaw(referenceTrajectory_.pos[0].orientation));
+    const int totalTimeStep = static_cast<int>(std::ceil(std::abs(dyaw) / 5.));
+    for (int i = 0; i < totalTimeStep; i++) {
+      vector_t targetState = initState;
+      targetState(3) = initState(3) + (i + 1) * dyaw / totalTimeStep;
+      timeTrajectory.push_back(startTime_ + (i + 1) * 0.1);
+      stateTrajectory.push_back(targetState);
+      inputTrajectory.push_back(vector_t::Zero(INPUT_DIM));
+    }
 
     for (int i = 0; i < referenceTrajectory_.pos.size(); ++i) {
       // Set target state
@@ -61,15 +76,9 @@ void RosReferenceManager::preSolverRun(
         targetState(2) = std::sqrt(
           referenceTrajectory_.vel[i].linear.x * referenceTrajectory_.vel[i].linear.x +
           referenceTrajectory_.vel[i].linear.y * referenceTrajectory_.vel[i].linear.y);
-        targetState(3) = tf::getYaw(referenceTrajectory_.pos[i].orientation);
-        if (
-          abs(angles::shortest_angular_distance(initState(3), targetState(3))) >
-          abs(angles::shortest_angular_distance(initState(3) + M_PI, targetState(3))))
-          targetState(3) =
-            initState(3) + angles::shortest_angular_distance(initState(3) + M_PI, targetState(3));
-        else
-          targetState(3) =
-            initState(3) + angles::shortest_angular_distance(initState(3), targetState(3));
+        targetState(3) =
+          initState(3) + angles::shortest_angular_distance(
+                           currentYaw, tf::getYaw(referenceTrajectory_.pos[i].orientation));
         return targetState;
       }();
 
@@ -83,9 +92,9 @@ void RosReferenceManager::preSolverRun(
         return targetInput;
       }();
 
-      timeTrajectory.push_back(startTime_ + referenceTrajectory_.time[i]);
+      timeTrajectory.push_back(startTime_ + totalTimeStep * 0.1 + referenceTrajectory_.time[i]);
       stateTrajectory.push_back(targetState);
-      inputTrajectory.emplace_back(vector_t::Zero(INPUT_DIM));
+      inputTrajectory.push_back(vector_t::Zero(INPUT_DIM));
     }
     referenceManagerPtr_->setTargetTrajectories({timeTrajectory, stateTrajectory, inputTrajectory});
   }
