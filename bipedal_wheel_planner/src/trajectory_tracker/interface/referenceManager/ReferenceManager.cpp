@@ -48,12 +48,15 @@ void RosReferenceManager::preSolverRun(
 
     // Set current yaw
     scalar_t currentYaw = initState(3);
+    int velDirection = 1;
     if (
       abs(angles::shortest_angular_distance(
         initState(3), tf::getYaw(referenceTrajectory_.pos[0].orientation))) >
       (abs(angles::shortest_angular_distance(
-        initState(3) + M_PI, tf::getYaw(referenceTrajectory_.pos[0].orientation)))))
+        initState(3) + M_PI, tf::getYaw(referenceTrajectory_.pos[0].orientation))))) {
       currentYaw += M_PI;
+      velDirection = -1;
+    }
 
     // Insert yaw transition trajectory
     scalar_t dyaw = angles::shortest_angular_distance(
@@ -73,9 +76,11 @@ void RosReferenceManager::preSolverRun(
         vector_t targetState = vector_t::Zero(STATE_DIM);
         targetState(0) = referenceTrajectory_.pos[i].position.x;
         targetState(1) = referenceTrajectory_.pos[i].position.y;
-        targetState(2) = std::sqrt(
-          referenceTrajectory_.vel[i].linear.x * referenceTrajectory_.vel[i].linear.x +
-          referenceTrajectory_.vel[i].linear.y * referenceTrajectory_.vel[i].linear.y);
+        targetState(2) =
+          std::sqrt(
+            referenceTrajectory_.vel[i].linear.x * referenceTrajectory_.vel[i].linear.x +
+            referenceTrajectory_.vel[i].linear.y * referenceTrajectory_.vel[i].linear.y) *
+          velDirection;
         targetState(3) =
           initState(3) + angles::shortest_angular_distance(
                            currentYaw, tf::getYaw(referenceTrajectory_.pos[i].orientation));

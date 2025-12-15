@@ -45,9 +45,9 @@ struct TrajectoryParams
   double piece_len = 4;
   double rho_v = 10000;           // Velocity penalty weight
   double rho_collision = 100000;  // Collision penalty weight
-  double rho_T = 150;             // Time penalty weight
+  double rho_T = 100;             // Time penalty weight
   double rho_energy = 30;         // Energy (smoothness) penalty weight
-  double max_v = 2.0;             // Maximum velocity
+  double max_v = 3.0;             // Maximum velocity
   double safe_threshold = 0.5;    // Safety distance threshold
 
   int int_K = 32;           // Integration sample points

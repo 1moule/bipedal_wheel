@@ -101,7 +101,7 @@ public:
   : map_(map), safe_threshold_(safe_threshold)
   {
     // Initialize default parameters (can be loaded from config file)
-    max_vel_ = 2.0;
+    max_vel_ = 3.0;
     max_acc_ = 3.0;
     time_resolution_ = 0.2;
     min_traj_num_ = 3;

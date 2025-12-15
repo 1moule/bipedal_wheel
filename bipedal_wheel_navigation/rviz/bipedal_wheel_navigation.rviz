@@ -246,7 +246,7 @@ Visualization Manager:
           Topic: /move_base/DWAPlannerROS/global_plan
           Unreliable: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Global Map
     - Class: rviz/Group
       Displays:
@@ -293,7 +293,7 @@ Visualization Manager:
           Topic: /move_base/DWAPlannerROS/local_plan
           Unreliable: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Local Map
     - Alpha: 1
       Arrow Length: 0.05000000074505806
