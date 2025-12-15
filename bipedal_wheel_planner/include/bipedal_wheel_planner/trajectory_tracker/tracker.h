@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include <nav_msgs/OccupancyGrid.h>
 #include <ocs2_mpc/MPC_MRT_Interface.h>
 #include <ros/ros.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include "bipedal_wheel_planner/trajectory_generator/perception_tools/GridMap.hpp"
 #include "bipedal_wheel_planner/trajectory_tracker/interface/AckermanInterface.h"
 #include "bipedal_wheel_planner/trajectory_tracker/interface/referenceManager/ReferenceManager.h"
 
@@ -46,6 +48,9 @@ private:
 
   // ROS
   ros::Publisher observationPublisher_, cmdVelPublisher;
+  ros::Subscriber gridMapSub_;
   ros::Time last_observation_time_;
+
+  std::shared_ptr<grid_map::GridMap> gridMap_;
 };
 }  // namespace bipedal_wheel_planner

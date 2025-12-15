@@ -28,6 +28,26 @@ Tracker::Tracker(ros::NodeHandle & nh)
   initMpc();
 
   cmdVelPublisher = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+  // Create grid map
+  gridMap_ = std::make_shared<grid_map::GridMap>();
+  auto gridMapCB = [this](const nav_msgs::OccupancyGrid::ConstPtr & msg) {
+    double resolution = msg->info.resolution;
+    double size_x = msg->info.width * resolution;
+    double size_y = msg->info.height * resolution;
+    Eigen::Vector2d origin(msg->info.origin.position.x, msg->info.origin.position.y);
+    gridMap_->init(size_x, size_y, resolution, origin);
+    grid_map::RowMatrixXi map(msg->info.width, msg->info.height);
+    for (int x = 0; x < msg->info.width; ++x) {
+      for (int y = 0; y < msg->info.height; ++y) {
+        int index = x + y * msg->info.width;
+        map(x, y) = msg->data[index];
+      }
+    }
+    gridMap_->setMap(map);
+    std::cout << "Grid map received." << std::endl;
+    ackerman_interface_->setupGridMap(gridMap_);
+  };
+  gridMapSub_ = nh.subscribe<nav_msgs::OccupancyGrid>("/map", 1, gridMapCB);
 }
 
 void Tracker::initMpc()

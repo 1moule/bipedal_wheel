@@ -61,7 +61,7 @@ void RosReferenceManager::preSolverRun(
     // Insert yaw transition trajectory
     scalar_t dyaw = angles::shortest_angular_distance(
       currentYaw, tf::getYaw(referenceTrajectory_.pos[0].orientation));
-    const int totalTimeStep = static_cast<int>(std::ceil(std::abs(dyaw) / 5.));
+    const int totalTimeStep = static_cast<int>(std::ceil(std::abs(dyaw) / 4.));
     for (int i = 0; i < totalTimeStep; i++) {
       vector_t targetState = initState;
       targetState(3) = initState(3) + (i + 1) * dyaw / totalTimeStep;

@@ -13,6 +13,7 @@
 #include <ocs2_robotic_tools/common/RobotInterface.h>
 #include <ocs2_sqp/SqpSettings.h>
 
+#include "bipedal_wheel_planner/trajectory_generator/perception_tools/GridMap.hpp"
 #include "bipedal_wheel_planner/trajectory_tracker/interface/definitions.h"
 
 namespace bipedal_wheel_planner
@@ -25,6 +26,7 @@ public:
   AckermanInterface(const std::string & taskFile, const std::string & libraryFolder);
   ~AckermanInterface() = default;
   void setupOptimalControlProblem(const std::string & taskFile, const std::string & libraryFolder);
+  void setupGridMap(std::shared_ptr<grid_map::GridMap> gridMap) { gridMap_ = gridMap; }
 
   const OptimalControlProblem & getOptimalControlProblem() const override { return *problemPtr_; }
 
@@ -51,5 +53,7 @@ private:
   std::unique_ptr<Initializer> initializerPtr_;
 
   vector_t initialState_{STATE_DIM};
+
+  std::shared_ptr<grid_map::GridMap> gridMap_;
 };
 }  // namespace bipedal_wheel_planner

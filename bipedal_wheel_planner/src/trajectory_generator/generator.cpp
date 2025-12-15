@@ -32,7 +32,7 @@ TrajectoryGenerator::TrajectoryGenerator(ros::NodeHandle & nh)
   gridMapSub_ = nh.subscribe<nav_msgs::OccupancyGrid>("/map", 1, gridMapCB);
 
   // Create AStar planner
-  astar_ = std::make_unique<path_planning::AStar>(*gridMap_, 0.5);
+  astar_ = std::make_unique<path_planning::AStar>(*gridMap_, 0.3);
   aStarPathPub_ = nh.advertise<nav_msgs::Path>("/astar_path", 1);
 
   // Initialize tf listener to get current pose
@@ -157,6 +157,7 @@ void TrajectoryGenerator::update(const ros::Duration & duraction)
     referenceTrajectoryPub_.publish(msg);
     targetUpdate_ = false;
 
+    // Publish reference position trajectory
     nav_msgs::Path path;
     path.header.frame_id = "map";
     path.header.stamp = ros::Time::now();

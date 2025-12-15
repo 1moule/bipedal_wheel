@@ -6,10 +6,13 @@
 
 #include <ocs2_core/initialization/DefaultInitializer.h>
 #include <ocs2_core/misc/LoadData.h>
+#include <ocs2_core/penalties/penalties/RelaxedBarrierPenalty.h>
+#include <ocs2_core/soft_constraint/StateSoftConstraint.h>
 
 #include <iostream>
 #include <string>
 
+#include "bipedal_wheel_planner/trajectory_tracker/interface/constraint/CollisionConstraint.h"
 #include "bipedal_wheel_planner/trajectory_tracker/interface/cost/AckermanQuadraticTrackingCost.h"
 #include "bipedal_wheel_planner/trajectory_tracker/interface/dynamics/AckermanDynamics.h"
 
@@ -73,6 +76,16 @@ void AckermanInterface::setupOptimalControlProblem(
   std::cerr << "Qf: \n" << Qf << "\n";
   problemPtr_->costPtr->add("cost", std::make_unique<QuadraticStateInputCost>(Q, R));
   problemPtr_->finalCostPtr->add("finalCost", std::make_unique<QuadraticStateCost>(Qf));
+
+  // Constraint
+  std::unique_ptr<CollisionConstraint> collisionConstraintPtr =
+    std::make_unique<CollisionConstraint>(gridMap_);
+  ocs2::RelaxedBarrierPenalty::Config barrierCollisionPenaltyConfig(1e4, 0.2);
+  problemPtr_->stateSoftConstraintPtr->add(
+    "CollisionConstraint",
+    std::unique_ptr<StateCost>(new StateSoftConstraint(
+      std::move(collisionConstraintPtr),
+      std::make_unique<ocs2::RelaxedBarrierPenalty>(barrierCollisionPenaltyConfig))));
 
   // Rollout
   auto rolloutSettings = rollout::loadSettings(taskFile, "rollout");
