@@ -6,7 +6,7 @@ The specific implementation method is as follows:
 
 1. Calculating leg kinematics by VMC, Implement balance control by LQR and adding PID to achieve comprehensive motion.
 2. Location is achieved using ICP and EKF, and navigation is achieved using ROS navigation.
-3. Implement trajectory tracker for an NMPC problem using [OCS2](https://github.com/leggedrobotics/ocs2).
+3. Implement A-star search, spline trajectory optimization, and NMPC trajectory tracker using [OCS2](https://github.com/leggedrobotics/ocs2).
 
 ## Installation
 ### Source code
@@ -79,3 +79,5 @@ catkin build
 [1] https://github.com/qiayuanl/legged_control
 
 [2] https://github.com/SCAU-RM-NAV/rm2023_auto_sentry_ws
+
+[3] https://github.com/MarineRock10/ST-opt-tools
