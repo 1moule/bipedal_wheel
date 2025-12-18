@@ -7,22 +7,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(catkin REQUIRED
         COMPONENTS
         roscpp
-        ocs2_legged_robot
         realtime_tools
         tf2_ros
 )
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(pinocchio REQUIRED pinocchio)
+find_package(Eigen3 REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
         include
+        ${EIGEN3_INCLUDE_DIR}
         LIBRARIES
         ${PROJECT_NAME}
         CATKIN_DEPENDS
         roscpp
-        ocs2_legged_robot
         realtime_tools
         tf2_ros
 )
@@ -34,27 +32,19 @@ catkin_package(
 include_directories(
         include
         ${catkin_INCLUDE_DIRS}
-        ${pinocchio_INCLUDE_DIRS}
-)
-
-link_directories(
-        ${pinocchio_LIBRARY_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a cpp library
 add_library(${PROJECT_NAME}
         src/StateEstimateBase.cpp
         src/FromTopicEstimate.cpp
-        #        src/LinearKalmanFilter.cpp
+        src/LinearKalmanFilter.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
-        ${pinocchio_LIBRARIES}
 )
-
-target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
-
 
 # Mark executables and/or libraries for installation
 install(TARGETS ${PROJECT_NAME}
