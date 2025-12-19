@@ -20,13 +20,11 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-namespace bipedal_wheel_planner
-{
+namespace bipedal_wheel_planner {
 using namespace ocs2;
 
 AckermanInterface::AckermanInterface(
-  const std::string & taskFile, const std::string & libraryFolder)
-{
+    const std::string &taskFile, const std::string &libraryFolder) {
   // check that task file exists
   boost::filesystem::path taskFilePath(taskFile);
   if (boost::filesystem::exists(taskFilePath))
@@ -50,9 +48,7 @@ AckermanInterface::AckermanInterface(
   setupOptimalControlProblem(taskFile, libraryFolder);
 }
 
-void AckermanInterface::setupOptimalControlProblem(
-  const std::string & taskFile, const std::string & libraryFolder)
-{
+void AckermanInterface::setupOptimalControlProblem(const std::string &taskFile, const std::string &libraryFolder) {
   // Optimal control problem
   problemPtr_ = std::make_unique<OptimalControlProblem>();
 
@@ -74,16 +70,13 @@ void AckermanInterface::setupOptimalControlProblem(
   std::cerr << "Q:  \n" << Q << "\n";
   std::cerr << "R:  \n" << R << "\n";
   std::cerr << "Qf: \n" << Qf << "\n";
-  problemPtr_->costPtr->add("cost", std::make_unique<QuadraticStateInputCost>(Q, R));
-  problemPtr_->finalCostPtr->add("finalCost", std::make_unique<QuadraticStateCost>(Qf));
+  problemPtr_->costPtr->add("cost", std::make_unique<AckermanStateInputQuadraticCost>(Q, R));
+  problemPtr_->finalCostPtr->add("finalCost", std::make_unique<AckermanStateFinalQuadraticCost>(Qf));
 
   // Constraint
-  std::unique_ptr<CollisionConstraint> collisionConstraintPtr =
-    std::make_unique<CollisionConstraint>(gridMap_);
+  std::unique_ptr<CollisionConstraint> collisionConstraintPtr = std::make_unique<CollisionConstraint>(gridMap_);
   ocs2::RelaxedBarrierPenalty::Config barrierCollisionPenaltyConfig(1e4, 0.2);
-  problemPtr_->stateSoftConstraintPtr->add(
-    "CollisionConstraint",
-    std::unique_ptr<StateCost>(new StateSoftConstraint(
+  problemPtr_->stateSoftConstraintPtr->add("CollisionConstraint", std::unique_ptr<StateCost>(new StateSoftConstraint(
       std::move(collisionConstraintPtr),
       std::make_unique<ocs2::RelaxedBarrierPenalty>(barrierCollisionPenaltyConfig))));
 
