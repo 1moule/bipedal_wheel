@@ -23,8 +23,7 @@
 namespace bipedal_wheel_planner {
 using namespace ocs2;
 
-AckermanInterface::AckermanInterface(
-    const std::string &taskFile, const std::string &libraryFolder) {
+AckermanInterface::AckermanInterface(const std::string &taskFile, const std::string &libraryFolder) {
   // check that task file exists
   boost::filesystem::path taskFilePath(taskFile);
   if (boost::filesystem::exists(taskFilePath))
