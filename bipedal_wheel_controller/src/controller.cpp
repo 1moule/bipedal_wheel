@@ -41,7 +41,7 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   model_params_ = std::make_shared<ModelParams>();
   tf_pub_.reset(new realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>(controller_nh, "/tf", 100));
 
-  stateEstimate_ = std::make_shared<bipedal_wheel_estimation::FromTopicStateEstimate>();
+  stateEstimate_ = std::make_shared<bipedal_wheel_estimation::KalmanFilterEstimate>();
 
   if (!setupModelParams(controller_nh) || !setupLQR(controller_nh))
     return false;
@@ -58,17 +58,6 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
     cmd_update_time_ = ros::Time::now();
   };
   vel_cmd_sub_ = controller_nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 1, velCmdCallback);
-  // Setup odometry realtime publisher
-  odom_pub_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(root_nh, "odom", 100));
-  odom_pub_->msg_.header.frame_id = "odom";
-  odom_pub_->msg_.child_frame_id = "base_link";
-  odom_pub_->msg_.twist.covariance = { 0.01, 0., 0.,   0., 0.,   0., 0., 0.01, 0., 0.,   0., 0.,
-                                       0.,   0., 0.01, 0., 0.,   0., 0., 0.,   0., 0.01, 0., 0.,
-                                       0.,   0., 0.,   0., 0.01, 0., 0., 0.,   0., 0.,   0., 0.01 };
-
-  odom2base_.header.frame_id = "odom";
-  odom2base_.child_frame_id = "base_link";
-  odom2base_.transform.rotation.w = 1;
 
   return true;
 }
@@ -85,7 +74,7 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
     ramp_x_->input(vel_cmd_.linear.x);
     ramp_w_->input(vel_cmd_.angular.z);
   }
-  if(!complete_stand_)
+  if (!complete_stand_)
   {
     ramp_x_->clear();
     ramp_w_->clear();
@@ -96,7 +85,6 @@ void BipedalController::update(const ros::Time& time, const ros::Duration& perio
   if (!balance_state_changed_)
     mode_manager_->switchMode(balance_mode_);
   updateEstimation(time, period);
-  updateOdom(time, period);
   mode_manager_->getModeImpl()->execute(this, time, period);
 }
 
@@ -115,6 +103,8 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   try
   {
     tf2::doTransform(gyro, angular_vel_base_, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
+    tf2::doTransform(acc, linear_acc_base, tf_buffer_->lookupTransform("base_link", imu_handle_.getFrameId(), time));
+
     geometry_msgs::TransformStamped tf_msg;
     tf_msg = tf_buffer_->lookupTransform(imu_handle_.getFrameId(), "base_link", time);
     tf2::fromMsg(tf_msg.transform, imu2base);
@@ -127,11 +117,6 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
     odom2imu.setRotation(odom2imu_quaternion);
     odom2base = odom2imu * imu2base;
     quatToRPY(toMsg(odom2base).rotation, roll, pitch, yaw);
-    odom2base_.transform.rotation = toMsg(odom2base).rotation;
-
-    tf_msg.transform = tf2::toMsg(odom2imu.inverse());
-    tf_msg.header.stamp = time;
-    tf2::doTransform(acc, linear_acc_base, tf_msg);
 
     tf2::Vector3 z_body(0, 0, 1);
     tf2::Vector3 z_world = tf2::quatRotate(odom2base.getRotation(), z_body);
@@ -159,13 +144,45 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   leg_spd(right_hip_joint_handle_.getVelocity(), right_knee_joint_handle_.getVelocity(), right_angle[0], right_angle[1],
           right_spd);
 
+  // kalman filter
+  double a_tmp = cos(left_angle[0]) * 0.15 + cos(left_angle[0] + left_angle[1]) * 0.27;
+  double t4 = left_angle[0] + left_angle[1];
+  double t4_dot = left_hip_joint_handle_.getVelocity() + left_knee_joint_handle_.getVelocity();
+  double a_tmp_dot = -0.15 * sin(left_angle[0]) * left_hip_joint_handle_.getVelocity() - 0.27 * sin(t4) * (t4_dot);
+  double length_dot = (2 * a_tmp * a_tmp_dot + 2 * t4 * t4_dot) / (2 * sqrt(a_tmp * a_tmp + t4 * t4));
+  Eigen::Matrix<double, 3, 3> orientationCovariance, angularVelCovariance, linearAccelCovariance;
+  Eigen::Quaternion<double> quat;
+  for (size_t i = 0; i < 4; ++i)
+  {
+    quat.coeffs()(i) = odom2base.getRotation()[i];
+  }
+  for (size_t i = 0; i < 9; ++i)
+  {
+    orientationCovariance(i) = imu_handle_.getOrientationCovariance()[i];
+    angularVelCovariance(i) = imu_handle_.getAngularVelocityCovariance()[i];
+    linearAccelCovariance(i) = imu_handle_.getLinearAccelerationCovariance()[i];
+  }
+  stateEstimate_->updateLegWHeelStates(
+      Eigen::Matrix<double, 2, 1>(left_pos[0], left_pos[1]),
+      Eigen::Matrix<double, 3, 1>(
+          length_dot, left_spd[1],
+          (((left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0))));
+  stateEstimate_->updateImu(quat,
+                            Eigen::Matrix<double, 3, 1>(angular_vel_base_.x, angular_vel_base_.y, angular_vel_base_.z),
+                            Eigen::Matrix<double, 3, 1>(linear_acc_base.x, linear_acc_base.y, linear_acc_base.z),
+                            orientationCovariance, angularVelCovariance, linearAccelCovariance);
+  stateEstimate_->update(time, period);
+
   // update state
-  x_left_[3] =
-      (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
+  x_left_[3] = stateEstimate_->getState()[0];
   if (abs(x_left_[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
     x_left_[2] += x_left_[3] * period.toSec();
   else
     x_left_[2] = 0.;
+  //  if (complete_stand_)
+  //    x_left_[2] += -(ramp_vel_cmd_.x - x_left_[3]) * period.toSec();
+  //  else
+  //    x_left_[2] = 0.;
   x_left_[0] = left_pos[1] + pitch;
   x_left_[1] = -left_spd[1] + angular_vel_base_.y;
   x_left_[4] = -pitch;
@@ -177,48 +194,6 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   mode_manager_->getModeImpl()->updateEstimation(x_left_, x_right_);
   mode_manager_->getModeImpl()->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);
   mode_manager_->getModeImpl()->updateBaseState(angular_vel_base_, linear_acc_base, roll, pitch, yaw);
-}
-
-void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& period)
-{
-//  stateEstimate_->update(time, period);
-
-  geometry_msgs::Vector3 linear_vel_base, linear_vel_odom;
-  linear_vel_base.x =
-      (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-  linear_vel_base.y = 0.;
-  linear_vel_base.z = 0.;
-  tf2::doTransform(linear_vel_base, linear_vel_odom, odom2base_);
-  odom2base_.header.stamp = time;
-  odom2base_.transform.translation.x += linear_vel_odom.x * period.toSec();
-  odom2base_.transform.translation.y += linear_vel_odom.y * period.toSec();
-  //  odom2base_.transform.translation.z += linear_vel_odom.z * period.toSec();
-  tf2_msgs::TFMessage message;
-  message.transforms.push_back(odom2base_);
-  tf_buffer_->setTransform(odom2base_, "bipedal_wheel_controller", true);
-  if (tf_pub_->trylock())
-  {
-    tf_pub_->msg_ = message;
-    tf_pub_->unlockAndPublish();
-  }
-  if (loop_count_ % 10 == 0)
-  {
-    if (odom_pub_->trylock())
-    {
-      odom_pub_->msg_.header.stamp = time;
-      odom_pub_->msg_.pose.pose.position.x = odom2base_.transform.translation.x;
-      odom_pub_->msg_.pose.pose.position.y = odom2base_.transform.translation.y;
-      odom_pub_->msg_.pose.pose.position.z = odom2base_.transform.translation.z;
-      odom_pub_->msg_.pose.pose.orientation = odom2base_.transform.rotation;
-      odom_pub_->msg_.twist.twist.linear.x =
-          (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2.0 * model_params_->r;
-      odom_pub_->msg_.twist.twist.linear.y = 0.;
-      odom_pub_->msg_.twist.twist.angular.z = angular_vel_base_.z;
-      odom_pub_->unlockAndPublish();
-    }
-    loop_count_ = 0;
-  }
-  loop_count_++;
 }
 
 void BipedalController::stopping(const ros::Time& time)

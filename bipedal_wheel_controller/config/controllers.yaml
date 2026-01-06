@@ -5,6 +5,9 @@ controllers:
   robot_state_controller:
     type: robot_state_controller/RobotStateController
     publish_rate: 100
+  imu_sensor_controller:
+    type: imu_sensor_controller/ImuSensorController
+    publish_rate: 200
 
   chassis_controller:
     type: bipedal_wheel_controller/BipedalController
