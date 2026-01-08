@@ -14,6 +14,7 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/Bool.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
@@ -42,8 +43,8 @@ public:
   bool getCompleteStand(){ return complete_stand_; }
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> getCoeffs() { return coeffs_; }
   const std::shared_ptr<ModelParams>& getModelParams(){ return model_params_; }
-  double getLegCmd(){ return legCmd_.data; }
-  double getJumpCmd(){ return jumpCmd_.data; }
+  double getLegCmd() const{ return legCmd_.data; }
+  double getJumpCmd() const{ return jumpCmd_.data; }
   geometry_msgs::Vector3 getVelCmd(){ return ramp_vel_cmd_; }
 
   void setStateChange(bool state){ balance_state_changed_ = state; }
@@ -85,6 +86,7 @@ private:
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
   std::shared_ptr<realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>> tf_pub_{};
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> state_pub_{};
 
   // ROS Interface
   ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;

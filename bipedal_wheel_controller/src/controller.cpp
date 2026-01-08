@@ -40,6 +40,8 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   mode_manager_ = std::make_unique<ModeManager>(controller_nh, joint_handles_);
   model_params_ = std::make_shared<ModelParams>();
   tf_pub_.reset(new realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>(controller_nh, "/tf", 100));
+  state_pub_.reset(
+      new realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>(controller_nh, "/x_left_x_right", 100));
 
   stateEstimate_ = std::make_shared<bipedal_wheel_estimation::KalmanFilterEstimate>();
 
@@ -174,15 +176,17 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   stateEstimate_->update(time, period);
 
   // update state
-  x_left_[3] = stateEstimate_->getState()[0];
-  if (abs(x_left_[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
-    x_left_[2] += x_left_[3] * period.toSec();
-  else
-    x_left_[2] = 0.;
-  //  if (complete_stand_)
-  //    x_left_[2] += -(ramp_vel_cmd_.x - x_left_[3]) * period.toSec();
+  //  x_left_[3] = stateEstimate_->getState()[0];
+  x_left_[3] =
+      (left_wheel_joint_handle_.getVelocity() + right_wheel_joint_handle_.getVelocity()) / 2. * model_params_->r;
+  //  if (abs(x_left_[3]) < 0.2 && ramp_vel_cmd_.x == 0.)
+  //    x_left_[2] += x_left_[3] * period.toSec();
   //  else
   //    x_left_[2] = 0.;
+  if (complete_stand_)
+    x_left_[2] += -(ramp_vel_cmd_.x - x_left_[3]) * period.toSec();
+  else
+    x_left_[2] = 0.;
   x_left_[0] = left_pos[1] + pitch;
   x_left_[1] = -left_spd[1] + angular_vel_base_.y;
   x_left_[4] = -pitch;
@@ -190,6 +194,13 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
   x_right_ = x_left_;
   x_right_[0] = right_pos[1] + pitch;
   x_right_[1] = -right_spd[1] + angular_vel_base_.y;
+
+  if (state_pub_ && state_pub_->trylock())
+  {
+    state_pub_->msg_.data.resize(12);
+    Eigen::Map<Eigen::Matrix<double, 12, 1>>(state_pub_->msg_.data.data()) << x_left_, x_right_;
+    state_pub_->unlockAndPublish();
+  }
 
   mode_manager_->getModeImpl()->updateEstimation(x_left_, x_right_);
   mode_manager_->getModeImpl()->updateLegKinematics(left_angle, right_angle, left_pos, left_spd, right_pos, right_spd);

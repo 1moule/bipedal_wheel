@@ -2,7 +2,7 @@
  * File: leg_conv.h
  *
  * MATLAB Coder version            : 5.5
- * C/C++ source code generated on  : 10-Aug-2025 14:29:16
+ * C/C++ source code generated on  : 23-Oct-2025 11:30:32
  */
 
 #ifndef LEG_CONV_H

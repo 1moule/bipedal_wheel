@@ -1,5 +1,5 @@
 <launch>
-    <arg name="odom_tf" default="true"/>
+    <arg name="odom_tf" default="false"/>
 
     <rosparam file="$(find bipedal_wheel_controller)/config/controllers.yaml" command="load"/>
 

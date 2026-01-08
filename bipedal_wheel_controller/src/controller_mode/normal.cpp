@@ -8,8 +8,8 @@
 namespace bipedal_wheel_controller
 {
 Normal::Normal(const std::vector<hardware_interface::JointHandle*>& joint_handles,
-               const std::vector<control_toolbox::Pid*>& pid_legs,  control_toolbox::Pid* pid_yaw_vel,
-                control_toolbox::Pid* pid_theta_diff,  control_toolbox::Pid* pid_roll)
+               const std::vector<control_toolbox::Pid*>& pid_legs, control_toolbox::Pid* pid_yaw_vel,
+               control_toolbox::Pid* pid_theta_diff, control_toolbox::Pid* pid_roll)
   : joint_handles_(joint_handles)
   , pid_legs_(pid_legs)
   , pid_yaw_vel_(pid_yaw_vel)
@@ -24,9 +24,10 @@ void Normal::execute(BipedalController* controller, const ros::Time& time, const
   {
     ROS_INFO("[balance] Enter NORMAL");
     controller->setStateChange(true);
-  }
-  if (!controller->getCompleteStand() && abs(x_left_[4]) < 0.2 && abs(x_left_[1]<0.2))
     controller->setCompleteStand(true);
+  }
+  //  if (!controller->getCompleteStand() && abs(x_left_[4]) < 0.2 && abs(x_left_[1] < 0.2))
+  //  controller->setCompleteStand(true);
 
   auto vel_cmd_ = controller->getVelCmd();
 
@@ -61,7 +62,7 @@ void Normal::execute(BipedalController* controller, const ros::Time& time, const
   auto model_params_ = controller->getModelParams();
   double gravity = 1. / 2. * model_params_->M * model_params_->g;
   Eigen::Matrix<double, 2, 1> F_leg;
-  double leg_length_des = controller->getLegCmd() == 0 ? 0.18 : controller->getLegCmd();
+  double leg_length_des = controller->getLegCmd() == 0. ? 0.18 : controller->getLegCmd();
   if (!start_jump_ && controller->getJumpCmd() && abs(x_left[0]) < 0.1)
   {
     start_jump_ = true;
@@ -86,8 +87,8 @@ void Normal::execute(BipedalController* controller, const ros::Time& time, const
   }
   else
   {
-    double left_length_des = controller->getCompleteStand() ? leg_length_des / cos(x_left[0]) : 0.18;
-    double right_length_des = controller->getCompleteStand() ? leg_length_des / cos(x_right[0]) : 0.18;
+    double left_length_des = leg_length_des;
+    double right_length_des = leg_length_des;
     F_leg[0] =
         pid_legs_[0]->computeCommand(left_length_des - left_pos_[0], period) + gravity * cos(left_pos_[1]) + T_roll;
     F_leg[1] =

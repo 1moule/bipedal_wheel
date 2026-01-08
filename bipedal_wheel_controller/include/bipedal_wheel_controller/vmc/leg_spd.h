@@ -2,7 +2,7 @@
  * File: leg_spd.h
  *
  * MATLAB Coder version            : 5.5
- * C/C++ source code generated on  : 10-Aug-2025 14:30:13
+ * C/C++ source code generated on  : 23-Oct-2025 11:29:48
  */
 
 #ifndef LEG_SPD_H

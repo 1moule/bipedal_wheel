@@ -37,10 +37,8 @@ void StandUp::execute(BipedalController* controller, const ros::Time& time, cons
   setJointCommands(joint_handles_, left_cmd, right_cmd);
 
   // Exit
-  if (((left_pos_[1] < 0. && left_leg_state == LegState::BEHIND) ||
-       (left_pos_[1] > 0. && left_leg_state == LegState::UNDER)) &&
-      ((right_pos_[1] < 0. && right_leg_state == LegState::BEHIND) ||
-       (right_pos_[1] > 0. && right_leg_state == LegState::UNDER)))
+  if (((left_pos_[0] < 0.14 && left_leg_state == LegState::BEHIND) || (left_leg_state == LegState::UNDER)) &&
+      ((right_pos_[0] < 0.14 && right_leg_state == LegState::BEHIND) || (right_leg_state == LegState::UNDER)))
   {
     controller->setMode(BalanceMode::NORMAL);
     controller->setStateChange(false);
@@ -55,8 +53,8 @@ void StandUp::setUpLegMotion(const Eigen::Matrix<double, STATE_DIM, 1>& x, const
   switch (leg_state)
   {
     case LegState::UNDER:
-      theta_des = 0.15;
-      length_des = 0.05;
+      theta_des = leg_theta;
+      length_des = leg_length;
       break;
     case LegState::FRONT:
       theta_des = M_PI / 2 + 0.2;
@@ -69,8 +67,8 @@ void StandUp::setUpLegMotion(const Eigen::Matrix<double, STATE_DIM, 1>& x, const
       length_des = leg_length;
       if (other_leg_state != LegState::FRONT)
       {
-        theta_des = 0.;
-        length_des = 0.05;
+        theta_des = acos((0.1 + 0.038 - 0.055) / leg_length);
+        length_des = 0.13;
       }
       break;
   }
