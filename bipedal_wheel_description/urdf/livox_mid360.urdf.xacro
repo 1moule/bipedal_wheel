@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="lidar_mid360">
+
+    <xacro:property name="M_PI" value="3.1415926"/>
+    <xacro:property name="update_rate" value="10"/>
+    <xacro:property name="resolution" value="1"/>
+    <xacro:property name="noise_mean" value="0.0"/>
+    <xacro:property name="noise_stddev" value="0.00"/>
+    <xacro:property name="laser_min_range" value="0.1"/>
+    <xacro:property name="laser_max_range" value="40"/>
+    <xacro:property name="vertical_fov" value="70.4"/>
+    <xacro:property name="ros_topic" value="/livox/lidar"/>
+    <xacro:property name="samples" value="20000"/>
+    <xacro:property name="downsample" value="1"/>
+
+    <xacro:macro name="livox_mid360" params="connected_to lidar_name simulation xyz:='0 0 0' rpy:='0 0 0' ">
+
+        <!-- Lidar is fixed to the connected_to link -->
+        <joint name="${lidar_name}_joint" type="fixed">
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+            <parent link="${connected_to}"/>
+            <child link="${lidar_name}"/>
+        </joint>
+
+        <!-- Lidar link -->
+        <link name="${lidar_name}">
+            <inertial>
+                <mass value="0.114"/>
+                <origin xyz="0 0 0"/>
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                         iyy="0.001" iyz="0.0"
+                         izz="0.001"/>
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://bipedal_wheel_description/meshes/livox_mid360.stl" scale="1 1 1"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 -0.005657 -0.005657" rpy="0 0 0"/>
+                <geometry>
+                    <cylinder length="0.078" radius="0.05"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <xacro:if value="${simulation}">
+            <gazebo reference="${lidar_name}">
+                <sensor type="ray" name="laser_livox">
+                    <pose>0 0 0.05 0 0 0</pose>
+                    <visualize>true</visualize>
+                    <always_on>True</always_on>
+                    <update_rate>30</update_rate>
+                    <!-- This ray plgin is only for visualization. -->
+                    <plugin name="gazebo_ros_laser_controller" filename="liblivox_laser_simulation.so">
+                        <ray>
+                            <scan>
+                                <horizontal>
+                                    <samples>100</samples>
+                                    <resolution>1</resolution>
+                                    <min_angle>-3.1415926535897931</min_angle>
+                                    <max_angle>3.1415926535897931</max_angle>
+                                </horizontal>
+                                <vertical>
+                                    <samples>50</samples>
+                                    <resolution>1</resolution>
+                                    <min_angle>-3.1415926535897931</min_angle>
+                                    <max_angle>3.1415926535897931</max_angle>
+                                </vertical>
+                            </scan>
+                            <range>
+                                <min>0.1</min>
+                                <max>40</max>
+                                <resolution>1</resolution>
+                            </range>
+                            <noise>
+                                <type>gaussian</type>
+                                <mean>0.0</mean>
+                                <stddev>0.0</stddev>
+                            </noise>
+                        </ray>
+                        <visualize>False</visualize>
+                        <samples>20000</samples>
+                        <downsample>1</downsample>
+                        <csv_file_name>mid360-real-centr.csv</csv_file_name>
+                        <publish_pointcloud_type>3</publish_pointcloud_type>
+                        <ros_topic>/livox/lidar</ros_topic>
+                        <frameName>livox_frame</frameName>
+                    </plugin>
+                </sensor>
+            </gazebo>
+        </xacro:if>
+
+    </xacro:macro>
+</robot>
