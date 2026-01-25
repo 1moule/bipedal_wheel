@@ -6,11 +6,11 @@
 
 #include <control_toolbox/pid.h>
 
-#include "bipedal_wheel_controller/controller_mode/mode_base.h"
-#include "bipedal_wheel_controller/controller_mode/sit_down.h"
-#include "bipedal_wheel_controller/controller_mode/stand_up.h"
-#include "bipedal_wheel_controller/controller_mode/recover.h"
-#include "bipedal_wheel_controller/controller_mode/normal.h"
+#include "bipedal_wheel_controller/fsm/mode_base.h"
+#include "bipedal_wheel_controller/fsm/sit_down.h"
+#include "bipedal_wheel_controller/fsm/stand_up.h"
+#include "bipedal_wheel_controller/fsm/recover.h"
+#include "bipedal_wheel_controller/fsm/normal.h"
 
 namespace bipedal_wheel_controller
 {

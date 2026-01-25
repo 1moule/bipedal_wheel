@@ -7,7 +7,7 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <control_toolbox/pid.h>
 
-#include "bipedal_wheel_controller/controller_mode/mode_base.h"
+#include "bipedal_wheel_controller/fsm/mode_base.h"
 #include "bipedal_wheel_controller/definitions.h"
 
 namespace bipedal_wheel_controller

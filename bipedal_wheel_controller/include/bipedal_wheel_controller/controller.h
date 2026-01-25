@@ -21,7 +21,7 @@
 #include <nav_msgs/Odometry.h>
 #include "bipedal_wheel_controller/helper_functions.h"
 #include "bipedal_wheel_controller/definitions.h"
-#include "bipedal_wheel_controller/controller_mode/mode_manager.h"
+#include "bipedal_wheel_controller/fsm/mode_manager.h"
 
 namespace bipedal_wheel_controller
 {

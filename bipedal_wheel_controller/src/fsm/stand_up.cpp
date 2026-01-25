@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-3.
 //
 
-#include "bipedal_wheel_controller/controller_mode/stand_up.h"
+#include "bipedal_wheel_controller/fsm/stand_up.h"
 #include "bipedal_wheel_controller/controller.h"
 #include "bipedal_wheel_controller/helper_functions.h"
 

@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-3.
 //
 
-#include "bipedal_wheel_controller/controller_mode/recover.h"
+#include "bipedal_wheel_controller/fsm/recover.h"
 #include "bipedal_wheel_controller/controller.h"
 
 namespace bipedal_wheel_controller

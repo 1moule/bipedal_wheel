@@ -7,7 +7,7 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <control_toolbox/pid.h>
 
-#include "bipedal_wheel_controller/controller_mode/mode_base.h"
+#include "bipedal_wheel_controller/fsm/mode_base.h"
 #include "bipedal_wheel_controller/definitions.h"
 
 namespace bipedal_wheel_controller
@@ -16,8 +16,8 @@ class Normal : public ModeBase
 {
 public:
   Normal(const std::vector<hardware_interface::JointHandle*>& joint_handles,
-         const std::vector<control_toolbox::Pid*>& pid_legs,  control_toolbox::Pid* pid_yaw_vel,
-          control_toolbox::Pid* pid_theta_diff,  control_toolbox::Pid* pid_roll);
+         const std::vector<control_toolbox::Pid*>& pid_legs, control_toolbox::Pid* pid_yaw_vel,
+         control_toolbox::Pid* pid_theta_diff, control_toolbox::Pid* pid_roll);
   void execute(BipedalController* controller, const ros::Time& time, const ros::Duration& period) override;
   const char* name() const override
   {

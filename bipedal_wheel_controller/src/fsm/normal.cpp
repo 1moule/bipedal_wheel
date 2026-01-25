@@ -2,7 +2,7 @@
 // Created by guanlin on 25-9-3.
 //
 
-#include "bipedal_wheel_controller/controller_mode/normal.h"
+#include "bipedal_wheel_controller/fsm/normal.h"
 #include "bipedal_wheel_controller/controller.h"
 
 namespace bipedal_wheel_controller

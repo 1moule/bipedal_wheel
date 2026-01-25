@@ -69,12 +69,12 @@ add_library(${PROJECT_NAME}
         src/dynamics/gen_A.c
         src/dynamics/gen_B.c
         src/controller.cpp
-        src/controller_mode/stand_up.cpp
-        src/controller_mode/sit_down.cpp
-        src/controller_mode/recover.cpp
-        src/controller_mode/normal.cpp
-        src/controller_mode/mode_manager.cpp
-        src/controller_mode/mode_base.cpp
+        src/fsm/stand_up.cpp
+        src/fsm/sit_down.cpp
+        src/fsm/recover.cpp
+        src/fsm/normal.cpp
+        src/fsm/state_manager.cpp
+        src/fsm/state_base.cpp
 )
 
 ## Specify libraries to link executable targets against
