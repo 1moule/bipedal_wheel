@@ -25,7 +25,7 @@ protected:
                     const Eigen::Matrix<double, Eigen::Dynamic, 1>& linearVel);
   void publishMsgs(const nav_msgs::Odometry& odom);
 
-  Eigen::Matrix<double, Eigen::Dynamic, 1> rbdState_, legWheelState_;
+  Eigen::Matrix<double, Eigen::Dynamic, 1> rbdState_;
 
   std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::Odometry>> odomPub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<geometry_msgs::PoseWithCovarianceStamped>> posePub_;

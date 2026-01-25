@@ -7,9 +7,7 @@
 namespace bipedal_wheel_estimation
 {
 
-StateEstimateBase::StateEstimateBase()
-  : rbdState_(Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(2 * 6))
-  , legWheelState_(Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(5))
+StateEstimateBase::StateEstimateBase() : rbdState_(Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(2 * 6))
 {
   ros::NodeHandle nh;
   odomPub_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(nh, "odom", 10));
