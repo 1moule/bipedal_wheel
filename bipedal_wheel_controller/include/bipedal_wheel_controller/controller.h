@@ -6,7 +6,7 @@
 
 #include <bipedal_wheel_common/lqr.h>
 #include <bipedal_wheel_common/filter.h>
-#include <bipedal_wheel_estimation/LinearKalmanFilter.h>
+#include <bipedal_wheel_common/velocity_observer.h>
 #include <control_toolbox/pid.h>
 #include <controller_interface/multi_interface_controller.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -55,6 +55,7 @@ public:
 
 private:
   void updateEstimation(const ros::Time& time, const ros::Duration& period);
+  void updateOdom(const ros::Time& time, const ros::Duration& period);
   bool setupModelParams(ros::NodeHandle& controller_nh);
   bool setupLQR(ros::NodeHandle& controller_nh);
   void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const std::vector<double>& L0s,
@@ -71,7 +72,7 @@ private:
   std::unique_ptr<ModeManager> mode_manager_;
 
   // estimation
-  std::shared_ptr<bipedal_wheel_estimation::KalmanFilterEstimate> stateEstimate_;
+  std::unique_ptr<bipedal_wheel_common::KalmanFilterEstimate> stateEstimate_;
 
   // stand up
   bool complete_stand_ = false, overturn_ = false;
@@ -86,9 +87,11 @@ private:
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
   std::shared_ptr<realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>> tf_pub_{};
-  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> state_pub_{};
+  geometry_msgs::TransformStamped odom2base_{};
 
   // ROS Interface
+  std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::Odometry>> odom_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> state_pub_;
   ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;
   std_msgs::Float64 legCmd_{};
   std_msgs::Bool jumpCmd_{};
@@ -98,5 +101,6 @@ private:
 
   std::unique_ptr<RampFilter> ramp_x_, ramp_w_;
   geometry_msgs::Vector3 angular_vel_base_{};
+  int loop_count_ = 0;
 };
 }  // namespace bipedal_wheel_controller

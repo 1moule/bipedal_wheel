@@ -23,6 +23,7 @@ controllers:
     pid_left_wheel_vel: { p: 0.04, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
     pid_right_wheel_vel: { p: 0.04, i: 0., d: 0., i_clamp_max: 0.0, i_clamp_min: 0.0, antiwindup: true, publish_state: true }
 
+    # Model Param
     L_weight: 0.463
     Lm_weight: 0.537
     l: -0.038
@@ -34,6 +35,12 @@ controllers:
     i_m: 0.1748
     g: 9.81
     wheel_radius: 0.055
+
+    # Kalman Filter Param
+    process_noise: 1000.
+    measure_noise_vel: 0.01
+    measure_noise_acc: 10.
+    measure_acc_offset: 0.087
 
     # theta d_theta x dx phi d_phi
     q: [ 300., 8., 5., 100., 1050., 5. ]

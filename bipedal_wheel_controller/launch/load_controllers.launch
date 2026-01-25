@@ -5,8 +5,11 @@
 
     <node name="controller_loader" pkg="controller_manager" type="controller_manager" output="screen"
           args="load
-          controllers/joint_state_controller
           controllers/chassis_controller
+          "/>
+    <node name="state_controller_loader" pkg="controller_manager" type="controller_manager" output="screen"
+          args="spawn
+          controllers/joint_state_controller
           controllers/imu_sensor_controller
           "/>
 
