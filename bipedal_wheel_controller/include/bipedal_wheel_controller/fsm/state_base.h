@@ -15,12 +15,12 @@ namespace bipedal_wheel_controller
 
 class BipedalController;
 
-class ModeBase
+class StateBase
 {
 public:
   virtual void execute(BipedalController* controller, const ros::Time& time, const ros::Duration& period) = 0;
   virtual const char* name() const = 0;
-  virtual ~ModeBase() = default;
+  virtual ~StateBase() = default;
   void updateEstimation(const Eigen::Matrix<double, STATE_DIM, 1>& x_left,
                         const Eigen::Matrix<double, STATE_DIM, 1>& x_right);
   void updateLegKinematics(double* left_angle, double* right_angle, double* left_pos, double* left_spd,

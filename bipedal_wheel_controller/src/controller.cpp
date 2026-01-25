@@ -37,7 +37,7 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
   ramp_w_ = std::make_unique<RampFilter>(10., 0.001);
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(ros::Duration(10));
   tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
-  mode_manager_ = std::make_unique<ModeManager>(controller_nh, joint_handles_);
+  mode_manager_ = std::make_unique<StateManager>(controller_nh, joint_handles_);
   model_params_ = std::make_shared<ModelParams>();
   tf_pub_.reset(new realtime_tools::RealtimePublisher<tf2_msgs::TFMessage>(controller_nh, "/tf", 100));
   state_pub_.reset(

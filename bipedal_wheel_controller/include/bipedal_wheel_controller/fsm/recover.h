@@ -7,12 +7,12 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <control_toolbox/pid.h>
 
-#include "bipedal_wheel_controller/fsm/mode_base.h"
+#include "bipedal_wheel_controller/fsm/state_base.h"
 #include "bipedal_wheel_controller/definitions.h"
 
 namespace bipedal_wheel_controller
 {
-class Recover : public ModeBase
+class Recover : public StateBase
 {
 public:
   Recover(const std::vector<hardware_interface::JointHandle*>& joint_handles,

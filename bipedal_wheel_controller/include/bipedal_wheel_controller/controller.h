@@ -21,7 +21,7 @@
 #include <nav_msgs/Odometry.h>
 #include "bipedal_wheel_controller/helper_functions.h"
 #include "bipedal_wheel_controller/definitions.h"
-#include "bipedal_wheel_controller/fsm/mode_manager.h"
+#include "bipedal_wheel_controller/fsm/state_manager.h"
 
 namespace bipedal_wheel_controller
 {
@@ -69,7 +69,7 @@ private:
 
   int balance_mode_ = BalanceMode::SIT_DOWN;
   bool balance_state_changed_ = false;
-  std::unique_ptr<ModeManager> mode_manager_;
+  std::unique_ptr<StateManager> mode_manager_;
 
   // estimation
   std::unique_ptr<bipedal_wheel_common::KalmanFilterEstimate> stateEstimate_;

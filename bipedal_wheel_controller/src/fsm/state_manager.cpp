@@ -2,12 +2,12 @@
 // Created by guanlin on 25-9-4.
 //
 
-#include "bipedal_wheel_controller/fsm/mode_manager.h"
+#include "bipedal_wheel_controller/fsm/state_manager.h"
 
 namespace bipedal_wheel_controller
 {
-ModeManager::ModeManager(ros::NodeHandle& controller_nh,
-                         const std::vector<hardware_interface::JointHandle*>& joint_handles)
+StateManager::StateManager(ros::NodeHandle& controller_nh,
+                           const std::vector<hardware_interface::JointHandle*>& joint_handles)
 {
   const std::pair<const char*, control_toolbox::Pid*> pids[] = {
     { "pid_yaw_vel", &pid_yaw_vel_ },
