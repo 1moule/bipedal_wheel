@@ -13,14 +13,14 @@
     <xacro:include filename="$(find bipedal_wheel_description)/urdf/imu.urdf.xacro"/>
     <xacro:IMU connected_to="base_link" imu_name="base_imu" xyz="0 0 0"
                rpy="0 0 0"/>
-    <!--    <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>-->
-    <!--    <xacro:VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" organize_cloud="${organize_cloud}" hz="10"-->
-    <!--                  samples="1875" min_range="0.1" gpu="${gpu}">-->
-    <!--        <origin xyz="0 0 0.11" rpy="0 0 0"/>-->
-    <!--    </xacro:VLP-16>-->
-    <xacro:include filename="$(find bipedal_wheel_description)/urdf/livox_mid360.urdf.xacro"/>
-    <xacro:livox_mid360 connected_to="base_link" simulation="$(arg use_simulation)" lidar_name="livox_frame"
-                        xyz="0 0 0.12" rpy="0 0 0"/>
+    <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+    <xacro:VLP-16 parent="base_link" name="velodyne" topic="/velodyne_points" organize_cloud="${organize_cloud}" hz="10"
+                  samples="1875" min_range="0.1" gpu="${gpu}">
+        <origin xyz="0 0 0.11" rpy="0 0 0"/>
+    </xacro:VLP-16>
+    <!--    <xacro:include filename="$(find bipedal_wheel_description)/urdf/livox_mid360.urdf.xacro"/>-->
+    <!--    <xacro:livox_mid360 connected_to="base_link" simulation="$(arg use_simulation)" lidar_name="livox_frame"-->
+    <!--                        xyz="0 0 0.12" rpy="0 0 0"/>-->
 
     <xacro:if value="$(arg use_simulation)">
         <gazebo>
