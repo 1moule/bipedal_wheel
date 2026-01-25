@@ -17,27 +17,24 @@ git clone https://github.com/1moule/bipedal_wheel
 ```
 
 ### OCS2
-1. Clone OCS2 and ocs2_robotic_assets into your workspace
+1. Clone OCS2 into your workspace
    
     ```
     # Clone OCS2
     git clone git@github.com:leggedrobotics/ocs2.git
-    
-    # Clone ocs2_robotic_assets
-    git clone https://github.com/leggedrobotics/ocs2_robotic_assets.git
     ```
     
 3. Compile these packages with catkin tools
    
    ```
    catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
-   catkin build
+   catkin build ocs2_ros_interfaces ocs2_robotic_tools ocs2_sqp
    ```
    
 ### build
 Build the source code by catkin tools
 ```
-catkin build
+catkin build bipedal_wheel_* velodyne_*
 ```
 ## Quick Start
 + Run basic control in empty world
