@@ -14,11 +14,10 @@
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
 
     <!-- Localization -->
-    <!--    <include file="$(find bipedal_wheel_navigation)/launch/amcl.launch"/>-->
-    <include file="$(find bipedal_wheel_localization)/launch/scan_to_map_location.launch"/>
+    <include file="$(find icp_localization)/launch/scan_to_map_location.launch"/>
 
     <!-- move_base -->
-    <include file="$(find bipedal_wheel_navigation)/launch/move_base.launch"/>
+    <!--    <include file="$(find bipedal_wheel_navigation)/launch/move_base.launch"/>-->
 
     <!-- trajectory tracker -->
     <include file="$(find bipedal_wheel_planner)/launch/tracker.launch"/>
