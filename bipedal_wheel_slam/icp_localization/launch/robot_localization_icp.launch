@@ -1,0 +1,38 @@
+<launch>
+    <!-- robot_localization EKF node for the map frame -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="robot_localization_ekf_node_map"
+          clear_params="true" respawn="true" output="log">
+        <remap from="set_pose" to="initialpose"/>
+        <rosparam command="load" file="$(find icp_localization)/config/robot_localization.yaml"/>
+    </node>
+
+    <!-- Convert 3D velodyne scan to laser scan -->
+    <node name="pointcloud_to_laserscan" pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node"
+          output="screen">
+        <remap from="cloud_in" to="/velodyne_points"/>
+        <remap from="scan" to="/scan"/>
+        <rosparam>
+            target_frame: velodyne # Leave disabled to output scan in pointcloud frame
+            transform_tolerance: 0.01
+            min_height: $(arg laser_scan_min_height)
+            max_height: $(arg laser_scan_max_height)
+
+            angle_min: -3.1415926 # -M_PI
+            angle_max: 3.1415926 # M_PI
+            angle_increment: 0.0087 # M_PI/360.0
+            scan_time: 0.03333
+            range_min: 0.1
+            range_max: 50.0
+            use_inf: true
+            inf_epsilon: 1.0
+
+            # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+            # 0 : Detect number of cores
+            # 1 : Single threaded
+            # 2->inf : Parallelism level
+            concurrency_level: 1
+        </rosparam>
+    </node>
+    
+</launch>
+

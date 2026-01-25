@@ -1,0 +1,8 @@
+<launch>
+
+    <node name="icp_localization" pkg="icp_localization" type="icp_localization" output="screen" respawn="false">
+        <rosparam file="$(find icp_localization)/config/icp_params.yaml" command="load"/>
+    </node>
+
+    <include file="$(find icp_localization)/launch/robot_localization_icp.launch"/>
+</launch>
