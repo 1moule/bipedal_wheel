@@ -23,43 +23,41 @@
 #include "bipedal_wheel_controller/definitions.h"
 #include "bipedal_wheel_controller/fsm/state_manager.h"
 
-namespace bipedal_wheel_controller
-{
+namespace bipedal_wheel_controller {
 using Eigen::Matrix;
 
 class BipedalController
-  : public controller_interface::MultiInterfaceController<hardware_interface::ImuSensorInterface,
-                                                          hardware_interface::EffortJointInterface>
-{
-public:
+    : public controller_interface::MultiInterfaceController<hardware_interface::ImuSensorInterface,
+                                                            hardware_interface::EffortJointInterface> {
+ public:
   BipedalController() = default;
-  bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& root_nh, ros::NodeHandle& controller_nh) override;
-  void update(const ros::Time& time, const ros::Duration& period) override;
-  void stopping(const ros::Time& time) override;
+  bool init(hardware_interface::RobotHW *robot_hw, ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh) override;
+  void update(const ros::Time &time, const ros::Duration &period) override;
+  void stopping(const ros::Time &time) override;
 
   // clang-format off
-  bool getOverturn(){ return overturn_; }
-  bool getStateChange(){ return balance_state_changed_; }
-  bool getCompleteStand(){ return complete_stand_; }
+  bool getOverturn() { return overturn_; }
+  bool getStateChange() { return balance_state_changed_; }
+  bool getCompleteStand() { return complete_stand_; }
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> getCoeffs() { return coeffs_; }
-  const std::shared_ptr<ModelParams>& getModelParams(){ return model_params_; }
-  double getLegCmd() const{ return legCmd_.data; }
-  double getJumpCmd() const{ return jumpCmd_.data; }
-  geometry_msgs::Vector3 getVelCmd(){ return ramp_vel_cmd_; }
+  const std::shared_ptr<ModelParams> &getModelParams() { return model_params_; }
+  double getLegCmd() const { return legCmd_.data; }
+  double getJumpCmd() const { return jumpCmd_.data; }
+  geometry_msgs::Vector3 getVelCmd() { return ramp_vel_cmd_; }
 
-  void setStateChange(bool state){ balance_state_changed_ = state; }
-  void setCompleteStand(bool state){ complete_stand_ = state; }
-  void setJumpCmd(bool cmd){ jumpCmd_.data = cmd; }
-  void setMode(int mode){ balance_mode_ = mode; }
+  void setStateChange(bool state) { balance_state_changed_ = state; }
+  void setCompleteStand(bool state) { complete_stand_ = state; }
+  void setJumpCmd(bool cmd) { jumpCmd_.data = cmd; }
+  void setMode(int mode) { balance_mode_ = mode; }
   // clang-format on
 
-private:
-  void updateEstimation(const ros::Time& time, const ros::Duration& period);
-  void updateOdom(const ros::Time& time, const ros::Duration& period);
-  bool setupModelParams(ros::NodeHandle& controller_nh);
-  bool setupLQR(ros::NodeHandle& controller_nh);
-  void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>>& Ks, const std::vector<double>& L0s,
-               Eigen::Matrix<double, 4, 12>& coeffs);
+ private:
+  void updateEstimation(const ros::Time &time, const ros::Duration &period);
+  void updateOdom(const ros::Time &time, const ros::Duration &period);
+  bool setupModelParams(ros::NodeHandle &controller_nh);
+  bool setupLQR(ros::NodeHandle &controller_nh);
+  void polyfit(const std::vector<Eigen::Matrix<double, 2, 6>> &Ks, const std::vector<double> &L0s,
+               Eigen::Matrix<double, 4, 12> &coeffs);
   Eigen::Matrix<double, 4, CONTROL_DIM * STATE_DIM> coeffs_;
   Eigen::Matrix<double, STATE_DIM, STATE_DIM> q_{};
   Eigen::Matrix<double, CONTROL_DIM, CONTROL_DIM> r_{};
@@ -81,7 +79,7 @@ private:
   hardware_interface::ImuSensorHandle imu_handle_;
   hardware_interface::JointHandle left_wheel_joint_handle_, right_wheel_joint_handle_, left_hip_joint_handle_,
       left_knee_joint_handle_, right_hip_joint_handle_, right_knee_joint_handle_;
-  std::vector<hardware_interface::JointHandle*> joint_handles_;
+  std::vector<hardware_interface::JointHandle *> joint_handles_;
 
   // transform
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -92,15 +90,17 @@ private:
   // ROS Interface
   std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::Odometry>> odom_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> state_pub_;
-  ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_;
+  ros::Subscriber leg_cmd_sub_, jump_cmd_sub_, vel_cmd_sub_, lio_sub_;
   std_msgs::Float64 legCmd_{};
   std_msgs::Bool jumpCmd_{};
   geometry_msgs::Twist vel_cmd_{};
   geometry_msgs::Vector3 ramp_vel_cmd_{};
+  nav_msgs::Odometry lio_odom_{};
   ros::Time cmd_update_time_;
 
   std::unique_ptr<RampFilter> ramp_x_, ramp_w_;
   geometry_msgs::Vector3 angular_vel_base_{};
   int loop_count_ = 0;
+  bool lio_update_ = false;
 };
 }  // namespace bipedal_wheel_controller

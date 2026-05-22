@@ -65,6 +65,11 @@ bool BipedalController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
     cmd_update_time_ = ros::Time::now();
   };
   vel_cmd_sub_ = controller_nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 1, velCmdCallback);
+  auto lioCallback = [this](const nav_msgs::Odometry::ConstPtr& msg) {
+    lio_odom_ = *msg;
+    lio_update_ = true;
+  };
+  lio_sub_ = controller_nh.subscribe<nav_msgs::Odometry>("/slam_odom", 1, lioCallback);
 
   // Setup odometry realtime publisher
   odom_pub_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(root_nh, "odom", 100));
@@ -219,6 +224,7 @@ void BipedalController::updateEstimation(const ros::Time& time, const ros::Durat
 
 void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& period)
 {
+  // wheel odom
   geometry_msgs::Vector3 linear_vel_base, linear_vel_odom;
   linear_vel_base.x = (x_left_[3] + x_right_[3]) / 2.;
   linear_vel_base.y = 0.;
@@ -228,6 +234,15 @@ void BipedalController::updateOdom(const ros::Time& time, const ros::Duration& p
   odom2base_.transform.translation.x += linear_vel_odom.x * period.toSec();
   odom2base_.transform.translation.y += linear_vel_odom.y * period.toSec();
   //  odom2base_.transform.translation.z += linear_vel_odom.z * period.toSec();
+  // lio
+  if (lio_update_)
+  {
+    odom2base_.transform.translation.x = lio_odom_.pose.pose.position.x;
+    odom2base_.transform.translation.y = lio_odom_.pose.pose.position.y;
+    odom2base_.transform.translation.z = lio_odom_.pose.pose.position.z;
+    odom2base_.transform.rotation = lio_odom_.pose.pose.orientation;
+    lio_update_ = false;
+  }
   tf2_msgs::TFMessage message;
   message.transforms.push_back(odom2base_);
   tf_buffer_->setTransform(odom2base_, "bipedal_wheel_controller", true);

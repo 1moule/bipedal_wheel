@@ -43,6 +43,6 @@ controllers:
     measure_acc_offset: 0.087
 
     # theta d_theta x dx phi d_phi
-    q: [ 300., 8., 5., 100., 1050., 5. ]
+    q: [ 300., 8., 5., 100., 2050., 5. ]
     # T Tp
     r: [ 0.6, 0.2 ]

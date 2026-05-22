@@ -15,6 +15,7 @@
 
     <!-- Localization -->
     <include file="$(find icp_localization)/launch/scan_to_map_location.launch"/>
+    <!--    <include file="$(find fastlio)/launch/localize.launch"/>-->
 
     <!-- move_base -->
     <!--    <include file="$(find bipedal_wheel_navigation)/launch/move_base.launch"/>-->
